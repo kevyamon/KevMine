@@ -15,11 +15,13 @@ import LockIcon from '@mui/icons-material/Lock';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import { useTheme } from '@mui/material/styles';
 
 const Header = () => {
   const { userInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const [logoutApiCall] = useLogoutMutation();
 
@@ -27,24 +29,39 @@ const Header = () => {
     try {
       await logoutApiCall().unwrap();
       dispatch(logout());
-      navigate('/login');
+      navigate('/');
     } catch (err) {
       console.error(err);
     }
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
+    <AppBar
+      position="static"
+      sx={{
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        boxShadow: 'none',
+        [theme.breakpoints.up('md')]: {
+          px: 8,
+        },
+      }}
+    >
       <Toolbar>
         <Typography
           variant="h6"
           component={Link}
           to={userInfo ? '/home' : '/'}
-          sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}
+          sx={{
+            flexGrow: 1,
+            textDecoration: 'none',
+            color: 'white',
+            fontWeight: 'bold',
+            letterSpacing: 1,
+          }}
         >
           KevMine
         </Typography>
-        <Box>
+        <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>
           {userInfo ? (
             <>
               <Button color="inherit" component={Link} to="/profile" startIcon={<AccountCircleIcon />}>
@@ -56,10 +73,33 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Button color="inherit" component={Link} to="/login" startIcon={<LockIcon />}>
-                Se connecter
+              <Button
+                color="inherit"
+                component={Link}
+                to="/login"
+                startIcon={<LockIcon />}
+                sx={{
+                  backgroundColor: theme.palette.info.main,
+                  '&:hover': {
+                    backgroundColor: theme.palette.info.dark,
+                  },
+                }}
+              >
+                Se Connecter
               </Button>
-              <Button color="inherit" component={Link} to="/register" startIcon={<PersonAddIcon />}>
+              <Button
+                color="inherit"
+                component={Link}
+                to="/register"
+                startIcon={<PersonAddIcon />}
+                sx={{
+                  backgroundColor: theme.palette.primary.main,
+                  ml: 2,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.dark,
+                  },
+                }}
+              >
                 S'inscrire
               </Button>
             </>
