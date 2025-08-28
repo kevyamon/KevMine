@@ -33,40 +33,40 @@ const ProfileScreen = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, px: { xs: 2, sm: 3 } }}>
       <Paper
         elevation={6}
         sx={{
-          p: 4,
+          p: { xs: 2, sm: 4 },
           backgroundColor: 'rgba(30, 30, 30, 0.85)',
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
         }}
       >
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', wordBreak: 'break-word' }}>
           Profil de {user?.name}
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
           Email: {user?.email}
         </Typography>
         <Typography
           variant="h5"
+          component="h2"
           color="primary.main"
-          sx={{ mt: 2, fontWeight: 'bold' }}
+          sx={{ mt: 2, fontWeight: 'bold', wordBreak: 'break-all' }} // 'break-all' pour forcer le retour à la ligne
         >
           Solde : {user?.keviumBalance.toLocaleString()} KVM
         </Typography>
       </Paper>
 
       <Box sx={{ mt: 5 }}>
-        <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>
           Mon Hangar à Robots
         </Typography>
         {user?.inventory?.length > 0 ? (
           <Grid container spacing={4}>
             {user.inventory.map((robot) => (
               <Grid item key={robot._id} xs={12} sm={6} md={4}>
-                {/* On ne passe pas la prop 'robot' à RobotCard, car elle n'est pas conçue pour l'inventaire */}
                 <RobotCard robot={robot} />
               </Grid>
             ))}

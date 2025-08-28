@@ -3,10 +3,11 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Box, createTheme, ThemeProvider, CssBaseline } from '@mui/material';
+import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } from '@mui/material';
 import bgImage from './assets/background.jpg';
 
-const theme = createTheme({
+// On garde le thème de base
+let theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
@@ -25,7 +26,6 @@ const theme = createTheme({
     },
     text: {
       primary: '#FFFFFF',
-      // LA CORRECTION EST ICI : on passe le texte secondaire en blanc cassé
       secondary: '#E0E0E0',
     },
   },
@@ -33,6 +33,9 @@ const theme = createTheme({
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
   },
 });
+
+// On rend les polices du thème responsives
+theme = responsiveFontSizes(theme);
 
 const App = () => {
   const location = useLocation();
