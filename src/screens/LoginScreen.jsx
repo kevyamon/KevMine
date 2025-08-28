@@ -4,11 +4,26 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { setCredentials } from '../redux/slices/authSlice';
 import { useLoginMutation } from '../redux/slices/usersApiSlice';
-import { Box, Typography, TextField, Button, CircularProgress, Paper, Container } from '@mui/material';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  CircularProgress,
+  Paper,
+  Container,
+  InputAdornment,
+  IconButton,
+} from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // État pour la visibilité du mot de passe
+  const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -36,11 +51,11 @@ const LoginScreen = () => {
 
   return (
     <Container component="main" maxWidth="xs">
-      <Paper elevation={3} sx={{ mt: 8, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Paper elevation={6} sx={{ mt: 8, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'background.paper' }}>
         <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
           Se connecter
         </Typography>
-        <Box component="form" onSubmit={submitHandler} noValidate sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={submitHandler} noValidate sx={{ mt: 1, width: '100%' }}>
           <TextField
             margin="normal"
             required
@@ -59,17 +74,31 @@ const LoginScreen = () => {
             fullWidth
             name="password"
             label="Mot de passe"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             id="password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            color="primary"
+            sx={{ mt: 3, mb: 2, py: 1.5 }}
             disabled={isLoading}
           >
             {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Se Connecter'}
@@ -77,10 +106,10 @@ const LoginScreen = () => {
         </Box>
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="body2">
-            Nouveau sur KevMine ? <Link to="/register">S'inscrire</Link>
+            Nouveau sur KevMine ? <Link to="/register" style={{ color: '#FFD700' }}>S'inscrire</Link>
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            <Link to="/forgot-password">Mot de passe oublié ?</Link>
+            <Link to="/forgot-password" style={{ color: '#00BFFF' }}>Mot de passe oublié ?</Link>
           </Typography>
         </Box>
       </Paper>

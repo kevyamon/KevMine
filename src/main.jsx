@@ -16,6 +16,7 @@ import RegisterScreen from './screens/RegisterScreen.jsx';
 import LandingScreen from './screens/LandingScreen.jsx';
 import PrivateRoutes from './components/PrivateRoutes.jsx';
 import ProfileScreen from './screens/ProfileScreen.jsx';
+import RobotStoreScreen from './screens/RobotStoreScreen.jsx'; // ÉTAPE 1: Importer le nouvel écran
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -24,11 +25,13 @@ const router = createBrowserRouter(
       <Route index={true} path="/" element={<LandingScreen />} />
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/register" element={<RegisterScreen />} />
-      
+
       {/* Private Routes */}
       <Route path="" element={<PrivateRoutes />}>
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfileScreen />} />
+        {/* ÉTAPE 2: Ajouter la nouvelle route pour le marché */}
+        <Route path="/store" element={<RobotStoreScreen />} />
       </Route>
     </Route>
   )

@@ -4,15 +4,36 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { setCredentials } from '../redux/slices/authSlice';
 import { useRegisterMutation } from '../redux/slices/usersApiSlice';
-import { Box, Typography, TextField, Button, CircularProgress, Paper, Container, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  CircularProgress,
+  Paper,
+  Container,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  InputAdornment,
+  IconButton,
+} from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const RegisterScreen = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // États pour la visibilité des mots de passe
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const [passwordValidations, setPasswordValidations] = useState({
     length: false,
@@ -76,12 +97,12 @@ const RegisterScreen = () => {
   ];
 
   return (
-    <Container component="main" maxWidth="md">
-      <Paper elevation={3} sx={{ mt: 8, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <Container component="main" maxWidth="sm">
+      <Paper elevation={6} sx={{ mt: 8, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'background.paper' }}>
         <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
           S'inscrire
         </Typography>
-        <Box component="form" onSubmit={submitHandler} noValidate sx={{ mt: 1, display: 'flex', flexDirection: 'column', width: '100%' }}>
+        <Box component="form" onSubmit={submitHandler} noValidate sx={{ mt: 1, width: '100%' }}>
           <TextField
             margin="normal"
             required
@@ -111,15 +132,28 @@ const RegisterScreen = () => {
             fullWidth
             name="password"
             label="Mot de passe"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             id="password"
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
-          <List dense sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', mb: 2, borderRadius: 1 }}>
+          <List dense sx={{ width: '100%', bgcolor: 'background.default', my: 2, borderRadius: 1 }}>
             {validationRules.map((rule) => (
-              <ListItem key={rule.key}>
+              <ListItem key={rule.key} sx={{py: 0.5}}>
                 <ListItemIcon sx={{ minWidth: 32 }}>
                   {passwordValidations[rule.key] ? (
                     <CheckCircleOutlineIcon color="success" />
@@ -137,17 +171,31 @@ const RegisterScreen = () => {
             fullWidth
             name="confirmPassword"
             label="Confirmer le mot de passe"
-            type="password"
+            type={showConfirmPassword ? 'text' : 'password'}
             id="confirmPassword"
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    edge="end"
+                  >
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            color="primary"
+            sx={{ mt: 3, mb: 2, py: 1.5 }}
             disabled={isLoading}
           >
             {isLoading ? <CircularProgress size={24} color="inherit" /> : "S'inscrire"}
@@ -155,7 +203,7 @@ const RegisterScreen = () => {
         </Box>
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="body2">
-            Déjà un compte ? <Link to="/login">Connectez-vous ici.</Link>
+            Déjà un compte ? <Link to="/login" style={{ color: '#FFD700' }}>Connectez-vous ici.</Link>
           </Typography>
         </Box>
       </Paper>

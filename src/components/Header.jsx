@@ -3,18 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLogoutMutation } from '../redux/slices/usersApiSlice';
 import { logout } from '../redux/slices/authSlice';
+import { toast } from 'react-toastify';
 import {
   AppBar,
   Toolbar,
   Typography,
   Button,
   Box,
-  IconButton,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import StorefrontIcon from '@mui/icons-material/Storefront'; // ÉTAPE 1: Importer l'icône
 
 const Header = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -30,6 +31,7 @@ const Header = () => {
       navigate('/');
     } catch (err) {
       console.error(err);
+      toast.error(err?.data?.message || err.error);
     }
   };
 
@@ -59,6 +61,15 @@ const Header = () => {
         <Box>
           {userInfo ? (
             <>
+              {/* ÉTAPE 2: Ajouter le bouton du marché ici */}
+              <Button
+                color="inherit"
+                component={Link}
+                to="/store"
+                startIcon={<StorefrontIcon />}
+              >
+                Marché
+              </Button>
               <Button
                 color="inherit"
                 component={Link}
