@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Container, Typography, Box, Paper, TextField, Button,
   CircularProgress, Alert, FormControlLabel, Checkbox, Select,
-  MenuItem, InputLabel, FormControl
+  MenuItem, InputLabel, FormControl, Grid // <-- L'IMPORT MANQUANT EST AJOUTÉ ICI
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import {

@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import { useGetProfileQuery, useUpdateProfilePhotoMutation } from '../redux/slices/usersApiSlice';
 import { useGetUserGameStatusQuery, useClaimKeviumMutation } from '../redux/slices/gameApiSlice';
 import RobotCard from '../components/RobotCard';
-import QuestsList from '../components/QuestsList'; // 1. Importer la liste des quêtes
+import QuestsList from '../components/QuestsList';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
@@ -90,7 +90,6 @@ const ProfileScreen = () => {
             </Button>
           </Paper>
 
-          {/* 2. Intégration de la liste des quêtes */}
           <Box sx={{ mt: 4 }}>
             <QuestsList />
           </Box>
@@ -100,10 +99,11 @@ const ProfileScreen = () => {
         <Grid item xs={12} md={4}>
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 3 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)', mb: 4 }}>
             <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>Historique des Transactions</Typography>
-            <Box>
+            {/* CORRECTION : Ajout d'une Box avec maxHeight et overflowY pour le scroll */}
+            <Box sx={{ maxHeight: '220px', overflowY: 'auto', pr: 1 }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><ShoppingCartIcon /> Achats</Typography>
               <List dense>
-                {sortedPurchaseHistory.length > 0 ? sortedPurchaseHistory.slice(0, 5).map((item, index) => ( // Limiter à 5
+                {sortedPurchaseHistory.length > 0 ? sortedPurchaseHistory.map((item, index) => (
                   <ListItem key={`purchase-${index}`} sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                     <ListItemText primary={`${item.robotName} - ${item.price} KVM`} />
                     <Typography variant="caption" color="text.secondary">{new Date(item.purchaseDate).toLocaleString()}</Typography>
@@ -112,10 +112,11 @@ const ProfileScreen = () => {
               </List>
             </Box>
             <Divider sx={{ my: 2 }} />
-            <Box>
+            {/* CORRECTION : Ajout d'une Box avec maxHeight et overflowY pour le scroll */}
+            <Box sx={{ maxHeight: '220px', overflowY: 'auto', pr: 1 }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><PointOfSaleIcon /> Ventes</Typography>
               <List dense>
-                {sortedSalesHistory.length > 0 ? sortedSalesHistory.slice(0, 5).map((item, index) => ( // Limiter à 5
+                {sortedSalesHistory.length > 0 ? sortedSalesHistory.map((item, index) => (
                   <ListItem key={`sale-${index}`} sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                     <ListItemText primary={`${item.robotName} - Gain: ${item.userRevenue} KVM`} secondary={`(Vendu ${item.salePrice} KVM)`}/>
                     <Typography variant="caption" color="text.secondary">{new Date(item.saleDate).toLocaleString()}</Typography>
