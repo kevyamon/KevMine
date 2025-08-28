@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLogoutMutation } from '../redux/slices/usersApiSlice';
@@ -8,14 +8,24 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   Box,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import LockIcon from '@mui/icons-material/Lock';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import StorefrontIcon from '@mui/icons-material/Storefront'; // ÉTAPE 1: Importer l'icône
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import SearchIcon from '@mui/icons-material/Search';
 
 const Header = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -23,6 +33,8 @@ const Header = () => {
   const navigate = useNavigate();
 
   const [logoutApiCall] = useLogoutMutation();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const logoutHandler = async () => {
     try {
@@ -35,83 +47,112 @@ const Header = () => {
     }
   };
 
-  return (
-    <AppBar
-      position="static"
-      sx={{
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        boxShadow: 'none',
-        px: { xs: 2, md: 8 },
-      }}
+  const toggleDrawer = (open) => (event) => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
+    }
+    setIsDrawerOpen(open);
+  };
+  
+  const handleNavigate = (path) => {
+    navigate(path);
+    setIsDrawerOpen(false);
+  };
+
+  const loggedInLinks = [
+    { text: 'Profil', path: '/profile', icon: <AccountCircleIcon />, action: () => handleNavigate('/profile') },
+    { text: 'Marché', path: '/store', icon: <StorefrontIcon />, action: () => handleNavigate('/store') },
+    { text: 'Déconnexion', path: '/logout', icon: <LogoutIcon />, action: logoutHandler },
+  ];
+
+  const loggedOutLinks = [
+    { text: 'Se Connecter', path: '/login', icon: <LockIcon />, action: () => handleNavigate('/login') },
+    { text: 'S\'inscrire', path: '/register', icon: <PersonAddIcon />, action: () => handleNavigate('/register') },
+  ];
+
+  const links = userInfo ? loggedInLinks : loggedOutLinks;
+
+  const filteredLinks = links.filter(link => 
+    link.text.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const drawerContent = (
+    <Box
+      sx={{ width: 280, height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.paper' }}
+      role="presentation"
     >
-      <Toolbar>
-        <Typography
-          variant="h6"
-          component={Link}
-          to={userInfo ? '/home' : '/'}
-          sx={{
-            flexGrow: 1,
-            textDecoration: 'none',
-            color: 'white',
-            fontWeight: 'bold',
+      <Box sx={{ p: 2 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Rechercher..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
           }}
-        >
-          KevMine
-        </Typography>
-        <Box>
-          {userInfo ? (
-            <>
-              {/* ÉTAPE 2: Ajouter le bouton du marché ici */}
-              <Button
-                color="inherit"
-                component={Link}
-                to="/store"
-                startIcon={<StorefrontIcon />}
-              >
-                Marché
-              </Button>
-              <Button
-                color="inherit"
-                component={Link}
-                to="/profile"
-                startIcon={<AccountCircleIcon />}
-              >
-                {userInfo.name}
-              </Button>
-              <Button
-                color="inherit"
-                onClick={logoutHandler}
-                startIcon={<LogoutIcon />}
-              >
-                Déconnexion
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                color="info"
-                variant="contained"
-                component={Link}
-                to="/login"
-                startIcon={<LockIcon />}
-                sx={{ mr: 2 }}
-              >
-                Se Connecter
-              </Button>
-              <Button
-                color="primary"
-                variant="contained"
-                component={Link}
-                to="/register"
-                startIcon={<PersonAddIcon />}
-              >
-                S'inscrire
-              </Button>
-            </>
-          )}
-        </Box>
-      </Toolbar>
-    </AppBar>
+        />
+      </Box>
+      <List sx={{ flexGrow: 1, overflowY: 'auto' }}>
+        {filteredLinks.map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton onClick={item.action}>
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+
+  return (
+    <>
+      <AppBar
+        position="static"
+        sx={{
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          boxShadow: 'none',
+          px: { xs: 1, md: 4 },
+        }}
+      >
+        <Toolbar>
+          <Typography
+            variant="h6"
+            component={Link}
+            to={userInfo ? '/home' : '/'}
+            sx={{
+              flexGrow: 1,
+              textDecoration: 'none',
+              color: 'white',
+              fontWeight: 'bold',
+            }}
+          >
+            KevMine
+          </Typography>
+          <IconButton
+            size="large"
+            edge="end"
+            color="inherit"
+            aria-label="menu"
+            onClick={toggleDrawer(true)}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        anchor="right"
+        open={isDrawerOpen}
+        onClose={toggleDrawer(false)}
+      >
+        {drawerContent}
+      </Drawer>
+    </>
   );
 };
 
