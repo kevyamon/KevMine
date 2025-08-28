@@ -16,7 +16,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import SearchIcon from '@mui/icons-material/Search';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'; // 1. Importer l'icône admin
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 const Header = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -54,9 +54,8 @@ const Header = () => {
     { text: 'Profil', path: '/profile', icon: <AccountCircleIcon />, action: () => handleNavigate('/profile') },
     { text: 'Classement', path: '/leaderboard', icon: <LeaderboardIcon />, action: () => handleNavigate('/leaderboard') },
     { text: 'Marché', path: '/store', icon: <StorefrontIcon />, action: () => handleNavigate('/store') },
-    // 2. Ajouter le lien Admin conditionnel
     ...(userInfo && userInfo.isAdmin
-      ? [{ text: 'Panel Admin', path: '/admin/userlist', icon: <AdminPanelSettingsIcon />, action: () => handleNavigate('/admin/userlist') }]
+      ? [{ text: 'Panel Admin', path: '/admin/robotlist', icon: <AdminPanelSettingsIcon />, action: () => handleNavigate('/admin/robotlist') }]
       : []),
     { text: 'Déconnexion', path: '/logout', icon: <LogoutIcon />, action: logoutHandler },
   ];

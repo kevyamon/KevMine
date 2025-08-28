@@ -14,6 +14,7 @@ export const robotsApiSlice = apiSlice.injectEndpoints({
       query: (robotId) => ({
         url: `${ROBOTS_URL}/${robotId}`,
       }),
+      providesTags: (result, error, arg) => [{ type: 'Robot', id: arg }],
       keepUnusedDataFor: 5,
     }),
     purchaseRobot: builder.mutation({
@@ -30,14 +31,36 @@ export const robotsApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User', 'Robot'],
     }),
-    // ---- MUTATION DE VENTE CORRIGÉE ----
-    // Elle ne prend plus que l'ID du robot en paramètre
     sellRobot: builder.mutation({
       query: (robotId) => ({
         url: `${ROBOTS_URL}/${robotId}/sell`,
         method: 'POST',
       }),
       invalidatesTags: ['User', 'Robot', 'Category'],
+    }),
+    // --- NOUVELLES MUTATIONS POUR L'ADMIN ---
+    createRobot: builder.mutation({
+      query: (data) => ({
+        url: ROBOTS_URL,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Robot'],
+    }),
+    updateRobot: builder.mutation({
+      query: (data) => ({
+        url: `${ROBOTS_URL}/${data.robotId}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Robot'],
+    }),
+    deleteRobot: builder.mutation({
+      query: (robotId) => ({
+        url: `${ROBOTS_URL}/${robotId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Robot'],
     }),
   }),
 });
@@ -48,4 +71,8 @@ export const {
   usePurchaseRobotMutation,
   useUpgradeRobotMutation,
   useSellRobotMutation,
+  // Exporter les nouveaux hooks
+  useCreateRobotMutation,
+  useUpdateRobotMutation,
+  useDeleteRobotMutation,
 } = robotsApiSlice;
