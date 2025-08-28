@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { useGetProfileQuery, useUpdateProfilePhotoMutation } from '../redux/slices/usersApiSlice';
 import { useGetUserGameStatusQuery, useClaimKeviumMutation } from '../redux/slices/gameApiSlice';
 import RobotCard from '../components/RobotCard';
+import QuestsList from '../components/QuestsList'; // 1. Importer la liste des quêtes
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
@@ -58,6 +59,7 @@ const ProfileScreen = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, px: { xs: 2, sm: 3 } }}>
       <Grid container spacing={4}>
+        {/* Colonne de gauche: Infos joueur et Quêtes */}
         <Grid item xs={12} md={8}>
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 4 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -88,29 +90,20 @@ const ProfileScreen = () => {
             </Button>
           </Paper>
 
-          <Box sx={{ mt: 5 }}>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>Mon Hangar à Robots</Typography>
-            {user?.inventory?.length > 0 ? (
-              <Grid container spacing={4}>
-                {user.inventory.map((robot) => (
-                  <Grid item key={robot._id} xs={12} sm={6} lg={4}>
-                    <RobotCard robot={robot} />
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Typography color="text.secondary">Vous ne possédez aucun robot. Visitez le <a href="/store" style={{ color: '#FFD700' }}>marché</a> !</Typography>
-            )}
+          {/* 2. Intégration de la liste des quêtes */}
+          <Box sx={{ mt: 4 }}>
+            <QuestsList />
           </Box>
         </Grid>
 
+        {/* Colonne de droite: Historique et Hangar */}
         <Grid item xs={12} md={4}>
-          <Paper elevation={6} sx={{ p: { xs: 2, sm: 3 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+          <Paper elevation={6} sx={{ p: { xs: 2, sm: 3 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)', mb: 4 }}>
             <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>Historique des Transactions</Typography>
             <Box>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><ShoppingCartIcon /> Achats</Typography>
               <List dense>
-                {sortedPurchaseHistory.length > 0 ? sortedPurchaseHistory.map((item, index) => (
+                {sortedPurchaseHistory.length > 0 ? sortedPurchaseHistory.slice(0, 5).map((item, index) => ( // Limiter à 5
                   <ListItem key={`purchase-${index}`} sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                     <ListItemText primary={`${item.robotName} - ${item.price} KVM`} />
                     <Typography variant="caption" color="text.secondary">{new Date(item.purchaseDate).toLocaleString()}</Typography>
@@ -122,7 +115,7 @@ const ProfileScreen = () => {
             <Box>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><PointOfSaleIcon /> Ventes</Typography>
               <List dense>
-                {sortedSalesHistory.length > 0 ? sortedSalesHistory.map((item, index) => (
+                {sortedSalesHistory.length > 0 ? sortedSalesHistory.slice(0, 5).map((item, index) => ( // Limiter à 5
                   <ListItem key={`sale-${index}`} sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                     <ListItemText primary={`${item.robotName} - Gain: ${item.userRevenue} KVM`} secondary={`(Vendu ${item.salePrice} KVM)`}/>
                     <Typography variant="caption" color="text.secondary">{new Date(item.saleDate).toLocaleString()}</Typography>
@@ -131,6 +124,21 @@ const ProfileScreen = () => {
               </List>
             </Box>
           </Paper>
+          
+          <Box>
+            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>Mon Hangar à Robots</Typography>
+            {user?.inventory?.length > 0 ? (
+              <Grid container spacing={4}>
+                {user.inventory.map((robot) => (
+                  <Grid item key={robot._id} xs={12}>
+                    <RobotCard robot={robot} />
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Typography color="text.secondary">Vous ne possédez aucun robot. Visitez le <a href="/store" style={{ color: '#FFD700' }}>marché</a> !</Typography>
+            )}
+          </Box>
         </Grid>
       </Grid>
     </Container>
