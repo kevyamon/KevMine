@@ -4,12 +4,11 @@ import Header from './components/Header';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Box, createTheme, ThemeProvider, CssBaseline } from '@mui/material';
-import bgImage from './assets/background.jpg'; // Étape 1: Importer l'image correctement
+import bgImage from './assets/background.jpg';
 
-// Étape 2: Améliorer le thème pour une meilleure visibilité
 const theme = createTheme({
   palette: {
-    mode: 'dark', // Assure que les composants MUI utilisent des couleurs claires par défaut
+    mode: 'dark',
     primary: {
       main: '#FFD700', // Or Kevium
     },
@@ -17,17 +16,17 @@ const theme = createTheme({
       main: '#00BFFF', // Bleu Sci-fi
     },
     info: {
-      // Ajout de la couleur 'info' qui manquait pour le bouton "Se connecter"
       main: '#00BFFF',
       dark: '#009acd',
     },
     background: {
       default: '#121212',
-      paper: 'rgba(30, 30, 30, 0.85)', // Fond de "papier" semi-transparent pour les modales, etc.
+      paper: 'rgba(30, 30, 30, 0.85)',
     },
     text: {
       primary: '#FFFFFF',
-      secondary: '#BDBDBD',
+      // LA CORRECTION EST ICI : on passe le texte secondaire en blanc cassé
+      secondary: '#E0E0E0',
     },
   },
   typography: {
@@ -45,8 +44,7 @@ const App = () => {
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    backgroundAttachment: 'fixed', // Le fond reste fixe au scroll
-    // Étape 3: Utiliser l'image importée
+    backgroundAttachment: 'fixed',
     backgroundImage: isLandingPage ? 'none' : `url(${bgImage})`,
     backgroundColor: '#000',
   };

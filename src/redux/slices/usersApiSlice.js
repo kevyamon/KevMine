@@ -23,8 +23,20 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         method: 'POST',
       }),
     }),
+    // ---- AJOUT DE LA REQUÊTE POUR LE PROFIL ----
+    getProfile: builder.query({
+      query: () => ({
+        url: `${USERS_URL}/profile`,
+      }),
+      providesTags: ['User'], // Permet de rafraîchir le profil après un achat
+      keepUnusedDataFor: 5,
+    }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation } =
-  usersApiSlice;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useGetProfileQuery, // Exporter le hook pour le profil
+} = usersApiSlice;
