@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Container, Typography, Box, Paper, Table, TableBody, TableCell,
@@ -25,9 +25,14 @@ const RankProgression = ({ rank, previousRank }) => {
 
 // --- Sous-composant pour la carte du rang personnel ---
 const PlayerRankCard = ({ userId }) => {
-  const { data: player, isLoading } = useGetPlayerRankQuery(userId);
+  // On ne lance la requête que si un userId est fourni
+  const { data: player, isLoading } = useGetPlayerRankQuery(userId, {
+    skip: !userId,
+  });
 
-  if (isLoading || !player) return <CircularProgress size={20} />;
+  if (isLoading) return <CircularProgress size={20} />;
+  
+  if (!player) return null; // Ne rien afficher si pas de joueur
 
   return (
     <Card sx={{ backgroundColor: 'rgba(0, 191, 255, 0.1)' }}>
@@ -49,11 +54,12 @@ const LeaderboardScreen = () => {
 
   const { data: leaderboard = [], isLoading, error } = useGetLeaderboardQuery(searchTerm);
 
-  const getRankStyle = (player, index) => {
+  const getRankStyle = (player) => {
     const style = {};
-    if (player.rank === 1) style.color = '#FFD700'; // Or pour le #1
-    if (player._id === userInfo._id) {
-      style.backgroundColor = 'rgba(255, 215, 0, 0.15)'; // Surlignage pour le joueur connecté
+    if (player.rank === 1) style.color = '#FFD700';
+    // On surligne la ligne uniquement si un utilisateur est connecté ET que c'est bien lui
+    if (userInfo && player._id === userInfo._id) {
+      style.backgroundColor = 'rgba(255, 215, 0, 0.15)';
     }
     return style;
   };
@@ -65,9 +71,9 @@ const LeaderboardScreen = () => {
       </Typography>
 
       <Grid container spacing={4} alignItems="flex-start">
-        {/* Colonne de gauche: Rang personnel et Infos */}
+        {/* Colonne de gauche: Rang personnel (conditionnel) */}
         <Grid item xs={12} md={4}>
-          <PlayerRankCard userId={userInfo._id} />
+          {userInfo && <PlayerRankCard userId={userInfo._id} />}
         </Grid>
 
         {/* Colonne de droite: Classement principal */}
