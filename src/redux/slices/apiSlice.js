@@ -29,7 +29,7 @@ async function baseQueryWithReauth(args, api, extraOptions) {
 
 export const apiSlice = createApi({
   baseQuery: baseQueryWithReauth,
-  // ON AJOUTE 'Category' À LA LISTE DES TAGS
-  tagTypes: ['User', 'Robot', 'Category'],
+  // ON AJOUTE 'Leaderboard' et 'PlayerRank' À LA LISTE DES TAGS
+  tagTypes: ['User', 'Robot', 'Category', 'Leaderboard', 'PlayerRank', 'Settings'],
   endpoints: (builder) => ({}),
 });

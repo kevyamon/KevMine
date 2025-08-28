@@ -1,10 +1,9 @@
 import { apiSlice } from './apiSlice';
 
-const GAME_URL = '/api/game'; // Création d'une constante pour la clarté
+const GAME_URL = '/api/game';
 
 export const gameApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // Requête pour obtenir le statut du jeu (KVM non réclamés, etc.)
     getUserGameStatus: builder.query({
       query: () => ({
         url: `${GAME_URL}/status`,
@@ -13,8 +12,6 @@ export const gameApiSlice = apiSlice.injectEndpoints({
       providesTags: ['GameStatus'],
       keepUnusedDataFor: 5,
     }),
-
-    // Mutation pour réclamer les KVM minés
     claimKevium: builder.mutation({
       query: () => ({
         url: `${GAME_URL}/claim`,
@@ -22,14 +19,20 @@ export const gameApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['GameStatus', 'User'],
     }),
-
-    // ---- NOUVELLE REQUÊTE POUR LE CLASSEMENT ----
     getLeaderboard: builder.query({
-      query: () => ({
+      query: (searchTerm) => ({
         url: `${GAME_URL}/leaderboard`,
+        params: { searchTerm }, // Permet d'ajouter le paramètre de recherche à l'URL
       }),
       providesTags: ['Leaderboard'],
-      keepUnusedDataFor: 60, // On garde le classement en cache pendant 60 secondes
+      keepUnusedDataFor: 60,
+    }),
+    // ---- NOUVELLE REQUÊTE POUR LE RANG DU JOUEUR ----
+    getPlayerRank: builder.query({
+      query: (userId) => ({
+        url: `${GAME_URL}/rank/${userId}`,
+      }),
+      providesTags: (result, error, arg) => [{ type: 'PlayerRank', id: arg }],
     }),
   }),
 });
@@ -37,5 +40,6 @@ export const gameApiSlice = apiSlice.injectEndpoints({
 export const {
   useGetUserGameStatusQuery,
   useClaimKeviumMutation,
-  useGetLeaderboardQuery, // Exporter le nouveau hook
+  useGetLeaderboardQuery,
+  useGetPlayerRankQuery, // Exporter le nouveau hook
 } = gameApiSlice;
