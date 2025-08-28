@@ -25,11 +25,12 @@ import PrivateRoutes from './components/PrivateRoutes.jsx';
 import AdminRoutes from './components/AdminRoutes.jsx';
 
 // Admin Screens
+import DashboardScreen from './screens/admin/DashboardScreen.jsx'; // 1. Importer
 import UserListScreen from './screens/admin/UserListScreen.jsx';
 import UserEditScreen from './screens/admin/UserEditScreen.jsx';
 import RobotListScreen from './screens/admin/RobotListScreen.jsx';
 import RobotEditScreen from './screens/admin/RobotEditScreen.jsx';
-import CategoryListScreen from './screens/admin/CategoryListScreen.jsx'; // 1. Importer
+import CategoryListScreen from './screens/admin/CategoryListScreen.jsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -49,11 +50,11 @@ const router = createBrowserRouter(
 
       {/* Admin Routes */}
       <Route path="" element={<AdminRoutes />}>
+        <Route path="/admin/dashboard" element={<DashboardScreen />} />
         <Route path="/admin/userlist" element={<UserListScreen />} />
         <Route path="/admin/user/:id/edit" element={<UserEditScreen />} />
         <Route path="/admin/robotlist" element={<RobotListScreen />} />
         <Route path="/admin/robot/:id/edit" element={<RobotEditScreen />} />
-        {/* 2. Ajouter la nouvelle route */}
         <Route path="/admin/categorylist" element={<CategoryListScreen />} />
       </Route>
     </Route>

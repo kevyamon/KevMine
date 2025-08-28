@@ -55,7 +55,7 @@ const Header = () => {
     { text: 'Classement', path: '/leaderboard', icon: <LeaderboardIcon />, action: () => handleNavigate('/leaderboard') },
     { text: 'Marché', path: '/store', icon: <StorefrontIcon />, action: () => handleNavigate('/store') },
     ...(userInfo && userInfo.isAdmin
-      ? [{ text: 'Panel Admin', path: '/admin/robotlist', icon: <AdminPanelSettingsIcon />, action: () => handleNavigate('/admin/robotlist') }]
+      ? [{ text: 'Panel Admin', path: '/admin/dashboard', icon: <AdminPanelSettingsIcon />, action: () => handleNavigate('/admin/dashboard') }]
       : []),
     { text: 'Déconnexion', path: '/logout', icon: <LogoutIcon />, action: logoutHandler },
   ];
