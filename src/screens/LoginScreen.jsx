@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { setCredentials } from '../redux/slices/authSlice';
 import { useLoginMutation } from '../redux/slices/usersApiSlice';
+import { setCredentials } from '../redux/slices/authSlice';
+import { toast } from 'react-toastify';
 import {
   Box,
   Typography,
@@ -19,14 +19,12 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const LoginScreen = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Changé de 'email' à 'identifier'
   const [password, setPassword] = useState('');
-  
-  // État pour la visibilité du mot de passe
   const [showPassword, setShowPassword] = useState(false);
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [login, { isLoading }] = useLoginMutation();
 
@@ -41,7 +39,7 @@ const LoginScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-      const res = await login({ email, password }).unwrap();
+      const res = await login({ identifier, password }).unwrap(); // Utilisation de 'identifier'
       dispatch(setCredentials({ ...res }));
       navigate('/home');
     } catch (err) {
@@ -50,7 +48,7 @@ const LoginScreen = () => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="sm">
       <Paper elevation={6} sx={{ mt: 8, p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'background.paper' }}>
         <Typography component="h1" variant="h5" sx={{ mb: 2 }}>
           Se connecter
@@ -60,13 +58,13 @@ const LoginScreen = () => {
             margin="normal"
             required
             fullWidth
-            id="email"
-            label="Adresse email"
-            name="email"
-            autoComplete="email"
+            id="identifier" // Changé l'ID
+            label="Email, Nom d'utilisateur ou Téléphone" // Nouveau libellé
+            name="identifier" // Changé le nom
+            autoComplete="username" // Suggestion pour la compatibilité des navigateurs
             autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
           />
           <TextField
             margin="normal"

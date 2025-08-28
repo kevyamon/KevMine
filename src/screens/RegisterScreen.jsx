@@ -23,17 +23,18 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/material.css';
 
 const RegisterScreen = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // États pour la visibilité des mots de passe
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
 
   const [passwordValidations, setPasswordValidations] = useState({
     length: false,
@@ -80,7 +81,7 @@ const RegisterScreen = () => {
     }
 
     try {
-      const res = await register({ name, email, password }).unwrap();
+      const res = await register({ name, email, phone, password }).unwrap();
       dispatch(setCredentials({ ...res }));
       navigate('/home');
     } catch (err) {
@@ -103,6 +104,15 @@ const RegisterScreen = () => {
           S'inscrire
         </Typography>
         <Box component="form" onSubmit={submitHandler} noValidate sx={{ mt: 1, width: '100%' }}>
+          {/* Correction du style pour le label flottant */}
+          <style>
+            {`
+              .react-tel-input .special-label {
+                color: rgba(255, 255, 255, 0.7) !important;
+                background: #1e1e1e !important; 
+              }
+            `}
+          </style>
           <TextField
             margin="normal"
             required
@@ -126,6 +136,36 @@ const RegisterScreen = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+          <Box sx={{ my: 2 }}>
+            <PhoneInput
+              country={'ci'}
+              masks={{ci: '.. .. .. .. ..'}}
+              placeholder="07 01 02 03 04" // Ajout du placeholder pour guider
+              value={phone}
+              onChange={setPhone}
+              inputStyle={{
+                width: '100%',
+                backgroundColor: 'transparent',
+                color: '#FFD700',
+                borderColor: 'rgba(255, 255, 255, 0.23)',
+                boxShadow: 'none',
+                height: '56px',
+                fontSize: '1rem',
+              }}
+              buttonStyle={{
+                backgroundColor: 'transparent',
+                borderColor: 'rgba(255, 255, 255, 0.23)',
+                boxShadow: 'none',
+              }}
+              dropdownStyle={{ backgroundColor: '#1e1e1e' }}
+              searchStyle={{ backgroundColor: '#333' }}
+              enableSearch={true}
+              inputProps={{
+                name: 'phone',
+                id: 'phone',
+              }}
+            />
+          </Box>
           <TextField
             margin="normal"
             required

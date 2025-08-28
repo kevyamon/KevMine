@@ -49,6 +49,12 @@ const ProfileScreen = () => {
         <Typography variant="body1" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
           Email: {user?.email}
         </Typography>
+        {/* Ajout du numéro de téléphone s'il existe */}
+        {user?.phone && (
+          <Typography variant="body1" color="text.secondary" sx={{ wordBreak: 'break-word', mt: 1 }}>
+            Téléphone: {user.phone}
+          </Typography>
+        )}
         <Typography
           variant="h5"
           component="h2"
