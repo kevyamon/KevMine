@@ -7,10 +7,14 @@ import {
   Box,
   Chip,
   Button,
+  CircularProgress,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
+import { usePurchaseRobotMutation } from '../redux/slices/robotsApiSlice';
+import { setCredentials } from '../redux/slices/authSlice';
 
-// Création d'un Chip personnalisé pour la rareté avec des couleurs spécifiques
 const RarityChip = styled(Chip)(({ theme, rarity }) => {
   const rarityColors = {
     common: {
@@ -34,6 +38,20 @@ const RarityChip = styled(Chip)(({ theme, rarity }) => {
 });
 
 const RobotCard = ({ robot }) => {
+  const dispatch = useDispatch();
+
+  const [purchaseRobot, { isLoading }] = usePurchaseRobotMutation();
+
+  const purchaseHandler = async (robotId) => {
+    try {
+      const res = await purchaseRobot(robotId).unwrap();
+      dispatch(setCredentials({ ...res.user }));
+      toast.success(res.message);
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
+    }
+  };
+
   return (
     <Card
       sx={{
@@ -57,7 +75,7 @@ const RobotCard = ({ robot }) => {
           p: 2,
           backgroundColor: 'rgba(0,0,0,0.2)',
         }}
-        image={robot.icon || '/placeholder-robot.png'} // Avoir un placeholder est une bonne pratique
+        image={robot.icon || '/placeholder-robot.png'}
         alt={robot.name}
       />
       <CardContent sx={{ flexGrow: 1 }}>
@@ -85,8 +103,16 @@ const RobotCard = ({ robot }) => {
           variant="contained"
           color="primary"
           sx={{ fontWeight: 'bold' }}
+          onClick={() => purchaseHandler(robot._id)}
+          disabled={isLoading || robot.stock === 0}
         >
-          Acheter pour {robot.price} KVM
+          {isLoading ? (
+            <CircularProgress size={24} />
+          ) : robot.stock === 0 ? (
+            'Rupture de stock'
+          ) : (
+            `Acheter pour ${robot.price} KVM`
+          )}
         </Button>
       </Box>
     </Card>

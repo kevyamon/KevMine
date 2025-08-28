@@ -7,7 +7,7 @@ export const robotsApiSlice = apiSlice.injectEndpoints({
       query: () => ({
         url: ROBOTS_URL,
       }),
-      providesTags: ['Robot'], // Permet de rafraîchir automatiquement les données
+      providesTags: ['Robot'],
       keepUnusedDataFor: 5,
     }),
     getRobotDetails: builder.query({
@@ -16,7 +16,19 @@ export const robotsApiSlice = apiSlice.injectEndpoints({
       }),
       keepUnusedDataFor: 5,
     }),
+    // ---- AJOUT DE LA MUTATION D'ACHAT ----
+    purchaseRobot: builder.mutation({
+      query: (robotId) => ({
+        url: `${ROBOTS_URL}/${robotId}/purchase`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['User', 'Robot'], // Pour rafraîchir les données utilisateur et robots après l'achat
+    }),
   }),
 });
 
-export const { useGetRobotsQuery, useGetRobotDetailsQuery } = robotsApiSlice;
+export const {
+  useGetRobotsQuery,
+  useGetRobotDetailsQuery,
+  usePurchaseRobotMutation, // Exporter le hook de la nouvelle mutation
+} = robotsApiSlice;
