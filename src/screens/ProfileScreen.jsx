@@ -1,14 +1,16 @@
 import React from 'react';
 import {
   Typography, Container, Box, Paper, Grid, CircularProgress,
-  Alert, Button, List, ListItem, ListItemText, Divider,
+  Alert, Button, List, ListItem, ListItemText, Divider, Avatar, IconButton,
 } from '@mui/material';
 import { toast } from 'react-toastify';
-import { useGetProfileQuery } from '../redux/slices/usersApiSlice';
+import { useSelector } from 'react-redux';
+import { useGetProfileQuery, useUpdateProfilePhotoMutation } from '../redux/slices/usersApiSlice';
 import { useGetUserGameStatusQuery, useClaimKeviumMutation } from '../redux/slices/gameApiSlice';
 import RobotCard from '../components/RobotCard';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
 
 const ProfileScreen = () => {
   const { data: user, isLoading: isLoadingUser, error: userError } = useGetProfileQuery();
@@ -16,14 +18,28 @@ const ProfileScreen = () => {
     pollingInterval: 10000,
   });
   const [claimKevium, { isLoading: isClaiming }] = useClaimKeviumMutation();
+  const [updateProfilePhoto, { isLoading: isUploadingPhoto }] = useUpdateProfilePhotoMutation();
+
+  const uploadPhotoHandler = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    try {
+      await updateProfilePhoto(formData).unwrap();
+      toast.success('Avatar mis à jour avec succès !');
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
+    }
+  };
 
   const handleClaim = async () => {
     try {
       const res = await claimKevium().unwrap();
       toast.success(res.message);
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
-    }
+    } catch (err) { toast.error(err?.data?.message || err.error); }
   };
 
   if (isLoadingUser) {
@@ -36,21 +52,31 @@ const ProfileScreen = () => {
   }
 
   const unclaimed = gameStatus?.unclaimedKevium || 0;
-  
-  // Trier les historiques par date, du plus récent au plus ancien
   const sortedPurchaseHistory = user?.purchaseHistory ? [...user.purchaseHistory].reverse() : [];
   const sortedSalesHistory = user?.salesHistory ? [...user.salesHistory].reverse() : [];
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, px: { xs: 2, sm: 3 } }}>
       <Grid container spacing={4}>
-        {/* Colonne de gauche: Infos principales et Hangar */}
         <Grid item xs={12} md={8}>
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 4 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
-            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>Profil de {user?.name}</Typography>
-            <Typography variant="body1" color="text.secondary">Email: {user?.email}</Typography>
-            {user?.phone && <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>Téléphone: {user.phone}</Typography>}
-            <Typography variant="h5" component="h2" color="primary.main" sx={{ mt: 2, fontWeight: 'bold' }}>Solde : {user?.keviumBalance.toLocaleString()} KVM</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Box sx={{ position: 'relative' }}>
+                <Avatar src={user?.photo} sx={{ width: 100, height: 100, border: '2px solid', borderColor: 'primary.main' }}>
+                  {user?.name.charAt(0)}
+                </Avatar>
+                <IconButton color="primary" component="label" sx={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                  <input type="file" hidden accept="image/*" onChange={uploadPhotoHandler} />
+                  {isUploadingPhoto ? <CircularProgress size={24} /> : <PhotoCamera />}
+                </IconButton>
+              </Box>
+              <Box>
+                <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>{user?.name}</Typography>
+                <Typography variant="body1" color="text.secondary">Email: {user?.email}</Typography>
+                {user?.phone && <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>Téléphone: {user.phone}</Typography>}
+              </Box>
+            </Box>
+            <Typography variant="h5" component="h2" color="primary.main" sx={{ mt: 3, fontWeight: 'bold' }}>Solde : {user?.keviumBalance.toLocaleString()} KVM</Typography>
           </Paper>
 
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 4 }, mt: 4, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)', textAlign: 'center' }}>
@@ -78,12 +104,9 @@ const ProfileScreen = () => {
           </Box>
         </Grid>
 
-        {/* Colonne de droite: Historique des transactions */}
         <Grid item xs={12} md={4}>
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 3 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
             <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>Historique des Transactions</Typography>
-            
-            {/* Historique des achats */}
             <Box>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><ShoppingCartIcon /> Achats</Typography>
               <List dense>
@@ -95,10 +118,7 @@ const ProfileScreen = () => {
                 )) : <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>Aucun achat récent.</Typography>}
               </List>
             </Box>
-            
             <Divider sx={{ my: 2 }} />
-
-            {/* Historique des ventes */}
             <Box>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><PointOfSaleIcon /> Ventes</Typography>
               <List dense>
