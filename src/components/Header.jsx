@@ -5,19 +5,8 @@ import { useLogoutMutation } from '../redux/slices/usersApiSlice';
 import { logout } from '../redux/slices/authSlice';
 import { toast } from 'react-toastify';
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Box,
-  IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  TextField,
-  InputAdornment,
+  AppBar, Toolbar, Typography, Box, IconButton, Drawer, List,
+  ListItem, ListItemButton, ListItemIcon, ListItemText, TextField, InputAdornment,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LockIcon from '@mui/icons-material/Lock';
@@ -26,6 +15,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import SearchIcon from '@mui/icons-material/Search';
+import LeaderboardIcon from '@mui/icons-material/Leaderboard'; // 1. Importer la nouvelle icône
 
 const Header = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -61,6 +51,8 @@ const Header = () => {
 
   const loggedInLinks = [
     { text: 'Profil', path: '/profile', icon: <AccountCircleIcon />, action: () => handleNavigate('/profile') },
+    // 2. AJOUTER LE NOUVEAU LIEN VERS LE CLASSEMENT
+    { text: 'Classement', path: '/leaderboard', icon: <LeaderboardIcon />, action: () => handleNavigate('/leaderboard') },
     { text: 'Marché', path: '/store', icon: <StorefrontIcon />, action: () => handleNavigate('/store') },
     { text: 'Déconnexion', path: '/logout', icon: <LogoutIcon />, action: logoutHandler },
   ];

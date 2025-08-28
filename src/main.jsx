@@ -16,7 +16,8 @@ import RegisterScreen from './screens/RegisterScreen.jsx';
 import LandingScreen from './screens/LandingScreen.jsx';
 import PrivateRoutes from './components/PrivateRoutes.jsx';
 import ProfileScreen from './screens/ProfileScreen.jsx';
-import RobotStoreScreen from './screens/RobotStoreScreen.jsx'; // ÉTAPE 1: Importer le nouvel écran
+import RobotStoreScreen from './screens/RobotStoreScreen.jsx';
+import LeaderboardScreen from './screens/LeaderboardScreen.jsx'; // 1. Importer le nouvel écran
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -30,8 +31,9 @@ const router = createBrowserRouter(
       <Route path="" element={<PrivateRoutes />}>
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfileScreen />} />
-        {/* ÉTAPE 2: Ajouter la nouvelle route pour le marché */}
         <Route path="/store" element={<RobotStoreScreen />} />
+        {/* 2. Ajouter la nouvelle route pour le classement */}
+        <Route path="/leaderboard" element={<LeaderboardScreen />} />
       </Route>
     </Route>
   )
