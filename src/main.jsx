@@ -10,14 +10,22 @@ import {
 } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import store from './redux/store.js';
+
+// Screens
 import HomePage from './screens/HomePage.jsx';
 import LoginScreen from './screens/LoginScreen.jsx';
 import RegisterScreen from './screens/RegisterScreen.jsx';
 import LandingScreen from './screens/LandingScreen.jsx';
-import PrivateRoutes from './components/PrivateRoutes.jsx';
 import ProfileScreen from './screens/ProfileScreen.jsx';
 import RobotStoreScreen from './screens/RobotStoreScreen.jsx';
-import LeaderboardScreen from './screens/LeaderboardScreen.jsx'; // 1. Importer le nouvel écran
+import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
+
+// Route Guards
+import PrivateRoutes from './components/PrivateRoutes.jsx';
+import AdminRoutes from './components/AdminRoutes.jsx'; // 1. Importer le nouveau gardien
+
+// Admin Screens
+import UserListScreen from './screens/admin/UserListScreen.jsx'; // 2. Importer le futur écran
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -32,8 +40,13 @@ const router = createBrowserRouter(
         <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/store" element={<RobotStoreScreen />} />
-        {/* 2. Ajouter la nouvelle route pour le classement */}
         <Route path="/leaderboard" element={<LeaderboardScreen />} />
+      </Route>
+
+      {/* Admin Routes */}
+      <Route path="" element={<AdminRoutes />}>
+        {/* 3. Définir le groupe de routes pour l'admin */}
+        <Route path="/admin/userlist" element={<UserListScreen />} />
       </Route>
     </Route>
   )

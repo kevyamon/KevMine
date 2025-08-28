@@ -15,7 +15,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import SearchIcon from '@mui/icons-material/Search';
-import LeaderboardIcon from '@mui/icons-material/Leaderboard'; // 1. Importer la nouvelle icône
+import LeaderboardIcon from '@mui/icons-material/Leaderboard';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'; // 1. Importer l'icône admin
 
 const Header = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -51,9 +52,12 @@ const Header = () => {
 
   const loggedInLinks = [
     { text: 'Profil', path: '/profile', icon: <AccountCircleIcon />, action: () => handleNavigate('/profile') },
-    // 2. AJOUTER LE NOUVEAU LIEN VERS LE CLASSEMENT
     { text: 'Classement', path: '/leaderboard', icon: <LeaderboardIcon />, action: () => handleNavigate('/leaderboard') },
     { text: 'Marché', path: '/store', icon: <StorefrontIcon />, action: () => handleNavigate('/store') },
+    // 2. Ajouter le lien Admin conditionnel
+    ...(userInfo && userInfo.isAdmin
+      ? [{ text: 'Panel Admin', path: '/admin/userlist', icon: <AdminPanelSettingsIcon />, action: () => handleNavigate('/admin/userlist') }]
+      : []),
     { text: 'Déconnexion', path: '/logout', icon: <LogoutIcon />, action: logoutHandler },
   ];
 
