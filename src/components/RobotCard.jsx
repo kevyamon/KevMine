@@ -8,13 +8,12 @@ import {
   Chip,
   Button,
   CircularProgress,
-  Divider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { toast } from 'react-toastify';
 import {
   usePurchaseRobotMutation,
-  useUpgradeRobotMutation, // 1. Importer le hook d'amélioration
+  useUpgradeRobotMutation,
 } from '../redux/slices/robotsApiSlice';
 
 const RarityChip = styled(Chip)(({ theme, rarity }) => {
@@ -41,10 +40,8 @@ const RarityChip = styled(Chip)(({ theme, rarity }) => {
 
 const RobotCard = ({ robot }) => {
   const [purchaseRobot, { isLoading: isPurchasing }] = usePurchaseRobotMutation();
-  // 2. Initialiser le hook d'amélioration
   const [upgradeRobot, { isLoading: isUpgrading }] = useUpgradeRobotMutation();
 
-  // Déterminer si la carte est utilisée dans l'inventaire ou dans le magasin
   const isInInventory = !!robot.owner;
 
   const purchaseHandler = async (robotId) => {
@@ -56,7 +53,6 @@ const RobotCard = ({ robot }) => {
     }
   };
 
-  // 3. Créer la fonction pour gérer l'amélioration
   const upgradeHandler = async (robotId) => {
     try {
       const res = await upgradeRobot(robotId).unwrap();
@@ -104,10 +100,19 @@ const RobotCard = ({ robot }) => {
           )}
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', my: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 2, gap: 1 }}>
           <RarityChip label={robot.rarity} rarity={robot.rarity} size="small" />
+          
+          {/* ---- AFFICHAGE DE LA CATÉGORIE ---- */}
+          {robot.category && (
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
+              {robot.category.name}
+            </Typography>
+          )}
+          {/* ---------------------------------- */}
+          
           {robot.isSponsored && (
-            <Chip label="Sponsorisé" color="primary" size="small" variant="outlined" />
+            <Chip label="Sponsorisé" color="primary" size="small" variant="outlined" sx={{ ml: 'auto' }} />
           )}
         </Box>
 
@@ -128,7 +133,6 @@ const RobotCard = ({ robot }) => {
       </CardContent>
       <Box sx={{ p: 2, pt: 0 }}>
         {isInInventory ? (
-          // --- BOUTON D'AMÉLIORATION ---
           <Button
             fullWidth
             variant="contained"
@@ -140,7 +144,6 @@ const RobotCard = ({ robot }) => {
             {isLoading ? <CircularProgress size={24} /> : `Améliorer`}
           </Button>
         ) : (
-          // --- BOUTON D'ACHAT (existant) ---
           <Button
             fullWidth
             variant="contained"
