@@ -30,14 +30,13 @@ export const robotsApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User', 'Robot'],
     }),
-    // ---- AJOUT DE LA MUTATION DE VENTE ----
+    // ---- MUTATION DE VENTE CORRIGÉE ----
+    // Elle ne prend plus que l'ID du robot en paramètre
     sellRobot: builder.mutation({
-      query: ({ robotId, salePrice }) => ({
+      query: (robotId) => ({
         url: `${ROBOTS_URL}/${robotId}/sell`,
         method: 'POST',
-        body: { salePrice },
       }),
-      // On rafraîchit tout : le profil du joueur, les robots du magasin et les catégories
       invalidatesTags: ['User', 'Robot', 'Category'],
     }),
   }),
@@ -48,5 +47,5 @@ export const {
   useGetRobotDetailsQuery,
   usePurchaseRobotMutation,
   useUpgradeRobotMutation,
-  useSellRobotMutation, // Exporter le hook de la nouvelle mutation
+  useSellRobotMutation,
 } = robotsApiSlice;

@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card, CardContent, CardMedia, Typography, Box, Chip, Button,
-  CircularProgress, Modal, TextField, InputAdornment
+  CircularProgress, Modal, Divider
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { toast } from 'react-toastify';
 import {
   usePurchaseRobotMutation,
   useUpgradeRobotMutation,
-  useSellRobotMutation, // 1. Importer le hook de vente
+  useSellRobotMutation,
 } from '../redux/slices/robotsApiSlice';
+import { useGetGameSettingsQuery } from '../redux/slices/adminApiSlice'; // Importer le hook des paramètres
 import SellIcon from '@mui/icons-material/Sell';
 import UpgradeIcon from '@mui/icons-material/Upgrade';
 
@@ -24,26 +25,18 @@ const RarityChip = styled(Chip)(({ theme, rarity }) => {
 });
 
 const ModalBox = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  backgroundColor: theme.palette.background.paper,
-  border: '2px solid #000',
-  boxShadow: 24,
-  padding: theme.spacing(4),
-  borderRadius: theme.shape.borderRadius,
-  textAlign: 'center',
+  position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+  width: 400, backgroundColor: theme.palette.background.paper, border: '2px solid #000',
+  boxShadow: 24, padding: theme.spacing(4), borderRadius: theme.shape.borderRadius,
 }));
 
 const RobotCard = ({ robot }) => {
   const [purchaseRobot, { isLoading: isPurchasing }] = usePurchaseRobotMutation();
   const [upgradeRobot, { isLoading: isUpgrading }] = useUpgradeRobotMutation();
-  const [sellRobot, { isLoading: isSelling }] = useSellRobotMutation(); // 2. Initialiser le hook de vente
+  const [sellRobot, { isLoading: isSelling }] = useSellRobotMutation();
+  const { data: settings } = useGetGameSettingsQuery(); // Récupérer les paramètres du jeu
 
   const [isSellModalOpen, setSellModalOpen] = useState(false);
-  const [salePrice, setSalePrice] = useState('');
 
   const isInInventory = !!robot.owner;
   const isPlayerSale = robot.isPlayerSale;
@@ -51,52 +44,45 @@ const RobotCard = ({ robot }) => {
   const handleOpenSellModal = () => setSellModalOpen(true);
   const handleCloseSellModal = () => setSellModalOpen(false);
 
+  // Logique de calcul pour la fenêtre de vente
+  const saleCalculations = useMemo(() => {
+    if (!isInInventory || !settings) return null;
+    const investedValue = robot.investedKevium;
+    const salePrice = Math.floor(investedValue * 1.4);
+    const commission = Math.floor(investedValue * settings.salesCommissionRate);
+    const userTotalReturn = salePrice - commission;
+    return { investedValue, salePrice, commission, userTotalReturn };
+  }, [robot, settings, isInInventory]);
+
   const purchaseHandler = async (robotId) => {
     try {
       const res = await purchaseRobot(robotId).unwrap();
       toast.success(res.message);
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
-    }
+    } catch (err) { toast.error(err?.data?.message || err.error); }
   };
 
   const upgradeHandler = async (robotId) => {
     try {
       const res = await upgradeRobot(robotId).unwrap();
       toast.success(res.message);
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
-    }
+    } catch (err) { toast.error(err?.data?.message || err.error); }
   };
 
-  // 3. Logique pour la vente
   const sellHandler = async () => {
-    if (!salePrice || Number(salePrice) <= 0) {
-      toast.error('Veuillez entrer un prix de vente valide.');
-      return;
-    }
     try {
-      const res = await sellRobot({ robotId: robot._id, salePrice: Number(salePrice) }).unwrap();
+      const res = await sellRobot(robot._id).unwrap();
       toast.success(res.message);
       handleCloseSellModal();
     } catch (err) {
       toast.error(err?.data?.message || err.error);
     }
   };
-
+  
   const isLoading = isPurchasing || isUpgrading || isSelling;
-  const price = isPlayerSale ? robot.salePrice : robot.price;
 
   return (
     <>
-      <Card
-        sx={{
-          display: 'flex', flexDirection: 'column', height: '100%',
-          backgroundColor: 'background.paper', border: '1px solid rgba(255, 255, 255, 0.12)',
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-          '&:hover': { transform: 'translateY(-5px)', boxShadow: `0 8px 20px 0 rgba(0, 0, 0, 0.3)` },
-        }}
-      >
+      <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'background.paper', border: '1px solid rgba(255, 255, 255, 0.12)', transition: 'transform 0.3s ease, box-shadow 0.3s ease', '&:hover': { transform: 'translateY(-5px)', boxShadow: `0 8px 20px 0 rgba(0, 0, 0, 0.3)` } }}>
         <CardMedia component="img" sx={{ height: 200, objectFit: 'contain', p: 2, backgroundColor: 'rgba(0,0,0,0.2)' }} image={robot.icon || '/placeholder-robot.png'} alt={robot.name} />
         <CardContent sx={{ flexGrow: 1 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -128,27 +114,25 @@ const RobotCard = ({ robot }) => {
             </Box>
           ) : (
             <Button fullWidth variant="contained" color="primary" sx={{ fontWeight: 'bold' }} onClick={() => purchaseHandler(robot._id)} disabled={isLoading || robot.stock === 0}>
-              {isLoading ? <CircularProgress size={24} /> : robot.stock === 0 ? 'Rupture de stock' : `Acheter pour ${price} KVM`}
+              {isLoading ? <CircularProgress size={24} /> : robot.stock === 0 ? 'Rupture de stock' : `Acheter pour ${robot.price} KVM`}
             </Button>
           )}
         </Box>
       </Card>
 
-      {/* --- MODALE DE VENTE --- */}
       <Modal open={isSellModalOpen} onClose={handleCloseSellModal}>
         <ModalBox>
-          <Typography variant="h6" component="h2">Mettre en vente {robot.name}</Typography>
-          <Typography sx={{ mt: 2 }}>Définissez un prix de vente. Une commission sera prélevée sur le montant final.</Typography>
-          <TextField
-            fullWidth
-            label="Prix de vente"
-            variant="outlined"
-            type="number"
-            value={salePrice}
-            onChange={(e) => setSalePrice(e.target.value)}
-            sx={{ mt: 3 }}
-            InputProps={{ endAdornment: <InputAdornment position="end">KVM</InputAdornment> }}
-          />
+          <Typography variant="h6" component="h2">Vendre {robot.name}</Typography>
+          {saleCalculations && (
+            <Box sx={{ my: 2, textAlign: 'left' }}>
+              <Typography>Valeur investie : {saleCalculations.investedValue} KVM</Typography>
+              <Typography>Prix de vente marché : {saleCalculations.salePrice} KVM (+40%)</Typography>
+              <Typography color="error">Commission ({settings.salesCommissionRate * 100}%) : -{saleCalculations.commission} KVM</Typography>
+              <Divider sx={{ my: 1 }} />
+              <Typography variant="h6" color="primary.main">Retour total : {saleCalculations.userTotalReturn} KVM</Typography>
+            </Box>
+          )}
+          <Typography sx={{ mt: 2, fontSize: '0.9rem' }}>Voulez-vous vraiment mettre ce robot en vente ?</Typography>
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
             <Button variant="outlined" color="inherit" onClick={handleCloseSellModal}>Annuler</Button>
             <Button variant="contained" color="primary" onClick={sellHandler} disabled={isSelling}>
