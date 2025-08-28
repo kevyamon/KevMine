@@ -16,13 +16,21 @@ export const robotsApiSlice = apiSlice.injectEndpoints({
       }),
       keepUnusedDataFor: 5,
     }),
-    // ---- AJOUT DE LA MUTATION D'ACHAT ----
     purchaseRobot: builder.mutation({
       query: (robotId) => ({
         url: `${ROBOTS_URL}/${robotId}/purchase`,
         method: 'POST',
       }),
-      invalidatesTags: ['User', 'Robot'], // Pour rafraîchir les données utilisateur et robots après l'achat
+      invalidatesTags: ['User', 'Robot'],
+    }),
+    // ---- AJOUT DE LA MUTATION D'AMÉLIORATION ----
+    upgradeRobot: builder.mutation({
+      query: (robotId) => ({
+        url: `${ROBOTS_URL}/${robotId}/upgrade`,
+        method: 'PUT',
+      }),
+      // Pour rafraîchir le profil utilisateur (solde KVM) et les robots
+      invalidatesTags: ['User', 'Robot'],
     }),
   }),
 });
@@ -30,5 +38,6 @@ export const robotsApiSlice = apiSlice.injectEndpoints({
 export const {
   useGetRobotsQuery,
   useGetRobotDetailsQuery,
-  usePurchaseRobotMutation, // Exporter le hook de la nouvelle mutation
+  usePurchaseRobotMutation,
+  useUpgradeRobotMutation, // Exporter le hook de la nouvelle mutation
 } = robotsApiSlice;
