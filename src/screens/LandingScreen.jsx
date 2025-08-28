@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react'; // Importer useEffect
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Box, Typography, Button, Container } from '@mui/material';
@@ -23,6 +23,13 @@ const LandingScreen = () => {
   const navigate = useNavigate();
   const { userInfo } = useSelector((state) => state.auth);
 
+  // Étape 1: Ajouter la redirection si l'utilisateur est déjà connecté
+  useEffect(() => {
+    if (userInfo) {
+      navigate('/home');
+    }
+  }, [userInfo, navigate]);
+
   const backgroundStyle = {
     minHeight: '100vh',
     backgroundSize: 'cover',
@@ -44,7 +51,7 @@ const LandingScreen = () => {
 
   return (
     <Box sx={backgroundStyle}>
-      <Container maxWidth="sm">
+      <Container maxWidth="md">
         <Typography
           variant="h2"
           component="h1"
@@ -52,6 +59,7 @@ const LandingScreen = () => {
           sx={{
             fontWeight: 'bold',
             animation: `${fadeIn} 1s ease-out`,
+            color: '#FFD700', // Couleur Or Kevium
           }}
         >
           Bienvenue sur KevMine
@@ -60,7 +68,7 @@ const LandingScreen = () => {
           variant="h5"
           component="p"
           gutterBottom
-          sx={{ mb: 4, animation: `${fadeIn} 1.5s ease-out` }}
+          sx={{ mb: 4, animation: `${fadeIn} 1.5s ease-out`, color: 'text.secondary' }}
         >
           La meilleure plateforme pour miner de la crypto avec vos robots.
         </Typography>
@@ -70,7 +78,6 @@ const LandingScreen = () => {
             gap: 2,
             flexDirection: 'column',
             alignItems: 'center',
-            animation: `${fadeIn} 2s ease-out, ${pulse} 2s infinite 3s`,
           }}
         >
           <Button
@@ -79,6 +86,12 @@ const LandingScreen = () => {
             size="large"
             startIcon={<PlayCircleOutlineIcon />}
             onClick={handlePlayClick}
+            sx={{
+              animation: `${fadeIn} 2s ease-out, ${pulse} 2s infinite 3s`,
+              py: 1.5,
+              px: 4,
+              fontSize: '1.2rem',
+            }}
           >
             Jouer
           </Button>
@@ -88,8 +101,12 @@ const LandingScreen = () => {
               color="inherit"
               sx={{
                 color: 'white',
-                borderColor: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.5)',
                 mt: 1,
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'white',
+                },
               }}
             >
               Déjà un compte ? Connectez-vous
