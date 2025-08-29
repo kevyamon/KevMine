@@ -1,26 +1,38 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #121212;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+/* Reset et styles globaux pour garantir le plein écran */
+html {
+  box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Règle ajoutée pour forcer l'application à prendre 100% de la largeur */
-#root {
-  width: 100%;
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
 }
 
-/* Styles du body simplifiés pour éviter le centrage forcé */
 body {
   margin: 0;
-  min-height: 100vh;
+  padding: 0;
+  width: 100vw; /* Utilise la largeur de la fenêtre */
+  min-height: 100vh; /* Utilise la hauteur de la fenêtre */
   background-color: #121212;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.87);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden; /* Empêche le scroll horizontal accidentel */
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+:root {
+  color-scheme: light dark;
 }

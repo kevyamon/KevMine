@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react'; // Importer useMemo
 import { useSelector } from 'react-redux';
 import {
   Container, Typography, Box, Paper, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, CircularProgress, Alert,
-  TextField, InputAdornment, Grid, Card, CardContent,
+  TextField, InputAdornment, Grid, Card, CardContent, List, ListItem, ListItemAvatar, Avatar, ListItemText, Divider
 } from '@mui/material';
 import { useGetLeaderboardQuery, useGetPlayerRankQuery } from '../redux/slices/gameApiSlice';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -25,27 +25,48 @@ const RankProgression = ({ rank, previousRank }) => {
 
 // --- Sous-composant pour la carte du rang personnel ---
 const PlayerRankCard = ({ userId }) => {
-  // On ne lance la requête que si un userId est fourni
   const { data: player, isLoading } = useGetPlayerRankQuery(userId, {
     skip: !userId,
   });
 
   if (isLoading) return <CircularProgress size={20} />;
   
-  if (!player) return null; // Ne rien afficher si pas de joueur
+  if (!player) return null;
 
   return (
-    <Card sx={{ backgroundColor: 'rgba(0, 191, 255, 0.1)' }}>
+    <Card sx={{ backgroundColor: 'rgba(0, 191, 255, 0.1)', mb: 4 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>Votre Position</Typography>
         <Typography variant="h4" component="p" sx={{ fontWeight: 'bold' }}>
-          Rang #{player.rank || 'Non classé'}
+          Rang #{player.rank > 0 ? player.rank : 'Non classé'}
         </Typography>
         <Typography color="text.secondary">{player.keviumBalance.toLocaleString()} KVM</Typography>
       </CardContent>
     </Card>
   );
 };
+
+// --- Sous-composant pour la liste du Top 10 ---
+const TopTenList = ({ players }) => (
+    <Paper sx={{ p: 2 }}>
+        <Typography variant="h6" gutterBottom sx={{textAlign: 'center', fontWeight: 'bold'}}>Top 10</Typography>
+        <List sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {players.map((player, index) => (
+                <React.Fragment key={player._id}>
+                    <ListItem>
+                        <ListItemAvatar>
+                            <Avatar sx={{ bgcolor: player.rank === 1 ? 'primary.main' : 'secondary.main' }}>
+                                {player.rank === 1 ? <EmojiEventsIcon /> : player.rank}
+                            </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText primary={player.name} secondary={`${player.keviumBalance.toLocaleString()} KVM`} />
+                    </ListItem>
+                    {index < players.length - 1 && <Divider variant="inset" component="li" />}
+                </React.Fragment>
+            ))}
+        </List>
+    </Paper>
+);
 
 
 const LeaderboardScreen = () => {
@@ -54,30 +75,26 @@ const LeaderboardScreen = () => {
 
   const { data: leaderboard = [], isLoading, error } = useGetLeaderboardQuery(searchTerm);
 
+  // CORRECTION : Le surlignage est retiré, seule la couleur pour le N°1 reste
   const getRankStyle = (player) => {
-    const style = {};
-    if (player.rank === 1) style.color = '#FFD700';
-    // On surligne la ligne uniquement si un utilisateur est connecté ET que c'est bien lui
-    if (userInfo && player._id === userInfo._id) {
-      style.backgroundColor = 'rgba(255, 215, 0, 0.15)';
+    if (player.rank === 1) {
+      return { color: '#FFD700' }; // Or pour le premier
     }
-    return style;
+    return {};
   };
 
+  const topTen = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       <Typography variant="h3" component="h1" gutterBottom textAlign="center" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 4 }}>
         Classement Mondial
       </Typography>
 
       <Grid container spacing={4} alignItems="flex-start">
-        {/* Colonne de gauche: Rang personnel (conditionnel) */}
-        <Grid item xs={12} md={4}>
-          {userInfo && <PlayerRankCard userId={userInfo._id} />}
-        </Grid>
-
-        {/* Colonne de droite: Classement principal */}
+        {/* Colonne de gauche: Classement principal et recherche */}
         <Grid item xs={12} md={8}>
+          {userInfo && <PlayerRankCard userId={userInfo._id} />}
           <Paper sx={{ p: 2, mb: 3 }}>
             <TextField
               fullWidth
@@ -100,8 +117,9 @@ const LeaderboardScreen = () => {
           ) : error ? (
             <Alert severity="error">Impossible de charger le classement : {error?.data?.message || error.error}</Alert>
           ) : (
-            <TableContainer component={Paper} sx={{ backgroundColor: 'background.paper' }}>
-              <Table aria-label="classement des joueurs">
+            // CORRECTION : Ajout du conteneur scrollable
+            <TableContainer component={Paper} sx={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'background.paper' }}>
+              <Table stickyHeader aria-label="classement des joueurs">
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 'bold', width: '20%' }}>Rang</TableCell>
@@ -114,7 +132,7 @@ const LeaderboardScreen = () => {
                     <TableRow key={player._id} sx={getRankStyle(player)}>
                       <TableCell component="th" scope="row" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {player.rank === 1 ? <EmojiEventsIcon /> : `#${player.rank}`}
+                          {`#${player.rank}`}
                           <RankProgression rank={player.rank} previousRank={player.previousRank} />
                         </Box>
                       </TableCell>
@@ -128,6 +146,11 @@ const LeaderboardScreen = () => {
               </Table>
             </TableContainer>
           )}
+        </Grid>
+
+        {/* Colonne de droite: Top 10 (visible uniquement sur les écrans larges) */}
+        <Grid item xs={12} md={4} sx={{ display: { xs: 'none', md: 'block' } }}>
+             {!isLoading && !error && topTen.length > 0 && <TopTenList players={topTen} />}
         </Grid>
       </Grid>
     </Container>
