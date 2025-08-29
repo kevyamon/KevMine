@@ -14,7 +14,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  width: 100vw; /* Utilise la largeur de la fenêtre */
+  /* La ligne "width: 100vw;" a été supprimée ici */
   min-height: 100vh; /* Utilise la hauteur de la fenêtre */
   background-color: #121212;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
