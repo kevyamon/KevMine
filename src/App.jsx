@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
-import { ToastContainer, toast } from 'react-toastify'; // Importer toast
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } from '@mui/material';
 import bgImage from './assets/background.jpg';
@@ -61,7 +61,6 @@ const App = () => {
         toast.info('Le marché des robots a été mis à jour !');
       });
       
-      // CORRECTION : Écouter l'événement de mise à jour des paramètres
       socket.on('settings_updated', (data) => {
         dispatch(apiSlice.util.invalidateTags(['Settings']));
         const newRatePercent = (data.newRate * 100).toFixed(0);
@@ -90,6 +89,9 @@ const App = () => {
     backgroundAttachment: 'fixed',
     backgroundImage: isLandingPage ? 'none' : `url(${bgImage})`,
     backgroundColor: '#000',
+    // CORRECTION : On transforme la Box principale en conteneur flex vertical
+    display: 'flex',
+    flexDirection: 'column',
   };
 
   return (
@@ -98,7 +100,8 @@ const App = () => {
       <Box sx={appStyle}>
         <Header />
         <ToastContainer theme="dark" />
-        <main>
+        {/* CORRECTION : On force la balise <main> à prendre toute la place restante */}
+        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Outlet />
         </main>
       </Box>
