@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react'; // Importer useMemo
+import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import {
   Container, Typography, Box, Paper, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, CircularProgress, Alert,
-  TextField, InputAdornment, Grid, Card, CardContent, List, ListItem, ListItemAvatar, Avatar, ListItemText, Divider
+  TextField, InputAdornment, Grid, Card, CardContent, List, ListItem,
+  ListItemAvatar, Avatar, ListItemText, Divider, Button, Modal
 } from '@mui/material';
 import { useGetLeaderboardQuery, useGetPlayerRankQuery } from '../redux/slices/gameApiSlice';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -71,19 +72,31 @@ const TopTenList = ({ players }) => (
 
 const LeaderboardScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isTopTenModalOpen, setIsTopTenModalOpen] = useState(false); // 1. État pour la modale
   const { userInfo } = useSelector((state) => state.auth);
 
   const { data: leaderboard = [], isLoading, error } = useGetLeaderboardQuery(searchTerm);
 
-  // CORRECTION : Le surlignage est retiré, seule la couleur pour le N°1 reste
   const getRankStyle = (player) => {
     if (player.rank === 1) {
-      return { color: '#FFD700' }; // Or pour le premier
+      return { color: '#FFD700' };
     }
     return {};
   };
 
   const topTen = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
+  
+  const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: { xs: '90%', sm: 400 },
+    bgcolor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    p: 2,
+  };
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -92,7 +105,6 @@ const LeaderboardScreen = () => {
       </Typography>
 
       <Grid container spacing={4} alignItems="flex-start">
-        {/* Colonne de gauche: Classement principal et recherche */}
         <Grid item xs={12} md={8}>
           {userInfo && <PlayerRankCard userId={userInfo._id} />}
           <Paper sx={{ p: 2, mb: 3 }}>
@@ -102,22 +114,25 @@ const LeaderboardScreen = () => {
               placeholder="Rechercher un joueur ou un rang..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
+              InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon /></InputAdornment>), }}
             />
           </Paper>
+
+          {/* 2. Bouton pour afficher la modale sur mobile */}
+          <Button
+            onClick={() => setIsTopTenModalOpen(true)}
+            variant="outlined"
+            color="secondary"
+            sx={{ mb: 2, display: { xs: 'block', md: 'none' }, width: '100%' }}
+          >
+            Voir le Top 10
+          </Button>
 
           {isLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>
           ) : error ? (
             <Alert severity="error">Impossible de charger le classement : {error?.data?.message || error.error}</Alert>
           ) : (
-            // CORRECTION : Ajout du conteneur scrollable
             <TableContainer component={Paper} sx={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: 'background.paper' }}>
               <Table stickyHeader aria-label="classement des joueurs">
                 <TableHead>
@@ -148,11 +163,21 @@ const LeaderboardScreen = () => {
           )}
         </Grid>
 
-        {/* Colonne de droite: Top 10 (visible uniquement sur les écrans larges) */}
         <Grid item xs={12} md={4} sx={{ display: { xs: 'none', md: 'block' } }}>
              {!isLoading && !error && topTen.length > 0 && <TopTenList players={topTen} />}
         </Grid>
       </Grid>
+      
+      {/* 3. La Modale */}
+      <Modal
+        open={isTopTenModalOpen}
+        onClose={() => setIsTopTenModalOpen(false)}
+      >
+        <Box sx={modalStyle}>
+          <TopTenList players={topTen} />
+        </Box>
+      </Modal>
+
     </Container>
   );
 };
