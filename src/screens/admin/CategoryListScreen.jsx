@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Container, Typography, Box, Paper, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, IconButton, Tooltip,
@@ -25,6 +25,7 @@ const style = {
   border: '2px solid #000',
   boxShadow: 24,
   p: 4,
+  borderRadius: 2,
 };
 
 const CategoryListScreen = () => {
@@ -37,6 +38,11 @@ const CategoryListScreen = () => {
   const [currentCategory, setCurrentCategory] = useState(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  
+  // Nouveaux états pour la modale de suppression
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [confirmationCode, setConfirmationCode] = useState('');
 
   const openModal = (category = null) => {
     setCurrentCategory(category);
@@ -50,6 +56,17 @@ const CategoryListScreen = () => {
     setCurrentCategory(null);
     setName('');
     setDescription('');
+  };
+
+  const openDeleteModal = (category) => {
+    setCategoryToDelete(category);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setCategoryToDelete(null);
+    setConfirmationCode('');
   };
 
   const submitHandler = async (e) => {
@@ -69,15 +86,18 @@ const CategoryListScreen = () => {
     }
   };
 
-  const deleteHandler = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
-      try {
-        await deleteCategory(id).unwrap();
-        toast.success('Catégorie supprimée');
-        refetch();
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+  const confirmDeleteHandler = async () => {
+    if (!categoryToDelete || !confirmationCode) {
+      toast.error('Veuillez entrer le code de confirmation.');
+      return;
+    }
+    try {
+      await deleteCategory({ id: categoryToDelete._id, confirmationCode }).unwrap();
+      toast.success('Catégorie et robots associés supprimés !');
+      refetch();
+      closeDeleteModal();
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
     }
   };
 
@@ -125,7 +145,7 @@ const CategoryListScreen = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Supprimer">
-                      <IconButton color="error" onClick={() => deleteHandler(category._id)}>
+                      <IconButton color="error" onClick={() => openDeleteModal(category)}>
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>
@@ -137,36 +157,45 @@ const CategoryListScreen = () => {
         </TableContainer>
       )}
 
+      {/* Modale pour Créer/Modifier */}
       <Modal open={modalOpen} onClose={closeModal}>
         <Box sx={style}>
           <Typography variant="h6" component="h2">
             {currentCategory ? 'Modifier la Catégorie' : 'Créer une Catégorie'}
           </Typography>
           <Box component="form" onSubmit={submitHandler} sx={{ mt: 2 }}>
-            <TextField
-              fullWidth
-              label="Nom"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              margin="normal"
-              required
-            />
-            <TextField
-              fullWidth
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              margin="normal"
-              multiline
-              rows={3}
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{ mt: 2 }}
-              disabled={isCreating || isUpdating}
-            >
+            <TextField fullWidth label="Nom" value={name} onChange={(e) => setName(e.target.value)} margin="normal" required />
+            <TextField fullWidth label="Description" value={description} onChange={(e) => setDescription(e.target.value)} margin="normal" multiline rows={3}/>
+            <Button type="submit" variant="contained" sx={{ mt: 2 }} disabled={isCreating || isUpdating}>
               {currentCategory ? 'Mettre à jour' : 'Créer'}
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      {/* Modale pour Confirmer la Suppression */}
+      <Modal open={deleteModalOpen} onClose={closeDeleteModal}>
+        <Box sx={style}>
+          <Typography variant="h6" component="h2" color="error.main" sx={{ fontWeight: 'bold' }}>
+            Suppression Définitive
+          </Typography>
+          <Typography sx={{ mt: 2 }}>
+            Vous êtes sur le point de supprimer la catégorie <strong>"{categoryToDelete?.name}"</strong> et <strong>tous les robots</strong> qui lui sont associés. Cette action est irréversible.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Entrez le code de confirmation"
+            value={confirmationCode}
+            onChange={(e) => setConfirmationCode(e.target.value)}
+            margin="normal"
+            required
+            autoFocus
+            sx={{mt: 2}}
+          />
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button variant='outlined' onClick={closeDeleteModal}>Annuler</Button>
+            <Button variant="contained" color="error" onClick={confirmDeleteHandler} disabled={isDeleting}>
+              {isDeleting ? <CircularProgress size={24} /> : 'Confirmer la Suppression'}
             </Button>
           </Box>
         </Box>
