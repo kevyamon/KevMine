@@ -27,9 +27,6 @@ const UserListScreen = () => {
   }, [users, searchTerm]);
 
   const deleteHandler = async (id) => {
-    // Vérifier si l'utilisateur à supprimer est celui actuellement connecté
-    // (Cette logique dépend de comment `userInfo` est accessible ici, on suppose qu'il n'est pas nécessaire pour le moment)
-    
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
       try {
         await deleteUser(id).unwrap();
@@ -44,7 +41,7 @@ const UserListScreen = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-        Gestion des Utilisateurs
+        ✅ Gestion des Utilisateurs (Mise à jour)
       </Typography>
 
       {/* Barre de recherche */}
