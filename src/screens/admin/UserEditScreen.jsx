@@ -1,121 +1,137 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Container, Typography, Box, Paper, TextField, Button,
-  CircularProgress, Alert, FormControlLabel, Checkbox, Select, MenuItem, InputLabel, FormControl
+  Container, Typography, Box, Paper, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, IconButton, Tooltip,
+  CircularProgress, Alert, Chip, TextField, InputAdornment
 } from '@mui/material';
 import { toast } from 'react-toastify';
-import {
-  useGetUserDetailsQuery,
-  useUpdateUserMutation,
-} from '../../redux/slices/adminApiSlice';
+import { useGetUsersQuery, useDeleteUserMutation } from '../../redux/slices/adminApiSlice';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import SearchIcon from '@mui/icons-material/Search';
 
-const UserEditScreen = () => {
-  const { id: userId } = useParams();
-  const navigate = useNavigate();
+const UserListScreen = () => {
+  const { data: users, refetch, isLoading, error } = useGetUsersQuery();
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [status, setStatus] = useState('active');
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    return users.filter(user =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
 
-  const { data: user, isLoading, error, refetch } = useGetUserDetailsQuery(userId);
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
-
-  useEffect(() => {
-    if (user) {
-      setName(user.name);
-      setEmail(user.email);
-      setIsAdmin(user.isAdmin);
-      setStatus(user.status);
-    }
-  }, [user]);
-
-  const submitHandler = async (e) => {
-    e.preventDefault();
-    try {
-      await updateUser({ userId, name, email, isAdmin, status }).unwrap();
-      toast.success('Utilisateur mis à jour avec succès');
-      refetch();
-      navigate('/admin/userlist');
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
+  const deleteHandler = async (id) => {
+    // Vérifier si l'utilisateur à supprimer est celui actuellement connecté
+    // (Cette logique dépend de comment `userInfo` est accessible ici, on suppose qu'il n'est pas nécessaire pour le moment)
+    
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      try {
+        await deleteUser(id).unwrap();
+        toast.success('Utilisateur supprimé avec succès');
+        refetch();
+      } catch (err) {
+        toast.error(err?.data?.message || err.error);
+      }
     }
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Button component={Link} to="/admin/userlist" sx={{ mb: 3 }}>
-        Retour à la liste
-      </Button>
-      <Paper sx={{ p: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
-          Modifier l'Utilisateur
-        </Typography>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+        Gestion des Utilisateurs
+      </Typography>
 
-        {isUpdating && <CircularProgress />}
-        {isLoading ? (
-          <CircularProgress />
-        ) : error ? (
-          <Alert severity="error">{error?.data?.message || error.error}</Alert>
-        ) : (
-          <Box component="form" onSubmit={submitHandler}>
-            <TextField
-              fullWidth
-              label="Nom"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              margin="normal"
-              required
-            />
-            <TextField
-              fullWidth
-              label="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              margin="normal"
-              required
-              type="email"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={isAdmin}
-                  onChange={(e) => setIsAdmin(e.target.checked)}
-                  disabled={user?.isSuperAdmin}
-                />
-              }
-              label="Administrateur"
-              sx={{ my: 2 }}
-            />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Statut</InputLabel>
-              <Select
-                value={status}
-                label="Statut"
-                onChange={(e) => setStatus(e.target.value)}
-                disabled={user?.isSuperAdmin}
-              >
-                <MenuItem value="active">Actif</MenuItem>
-                <MenuItem value="banned">Banni</MenuItem>
-                <MenuItem value="inactive">Inactif</MenuItem>
-              </Select>
-            </FormControl>
-
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              sx={{ mt: 3 }}
-              disabled={isUpdating}
-            >
-              Mettre à jour
-            </Button>
-          </Box>
-        )}
+      {/* Barre de recherche */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Rechercher un utilisateur par nom ou email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
       </Paper>
+
+      {isDeleting && <CircularProgress />}
+      {isLoading ? (
+        <CircularProgress />
+      ) : error ? (
+        <Alert severity="error">{error?.data?.message || error.error}</Alert>
+      ) : (
+        // Conteneur de tableau scrollable
+        <TableContainer component={Paper} sx={{ maxHeight: '70vh' }}>
+          <Table stickyHeader aria-label="user list table">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>NOM</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>EMAIL</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 'bold' }}>ADMIN</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 'bold' }}>STATUT</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 'bold' }}>ACTIONS</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredUsers.map((user) => (
+                <TableRow key={user._id} hover>
+                  <TableCell>{user._id}</TableCell>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell align="center">
+                    {user.isAdmin ? (
+                      <CheckCircleIcon color="success" />
+                    ) : (
+                      <CancelIcon color="error" />
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Chip
+                      label={user.status}
+                      color={user.status === 'active' ? 'success' : 'error'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    <Tooltip title="Modifier">
+                      <IconButton
+                        component={Link}
+                        to={`/admin/user/${user._id}/edit`}
+                        sx={{ mr: 1 }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Supprimer">
+                      <IconButton
+                        color="error"
+                        onClick={() => deleteHandler(user._id)}
+                        disabled={user.isSuperAdmin}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </Container>
   );
 };
 
-export default UserEditScreen;
+export default UserListScreen;
