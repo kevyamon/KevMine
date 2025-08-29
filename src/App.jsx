@@ -1,23 +1,23 @@
-import React, { useEffect } from 'react'; // Importer useEffect
+import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux'; // Importer useSelector et useDispatch
+import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify'; // Importer toast
 import 'react-toastify/dist/ReactToastify.css';
 import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } from '@mui/material';
 import bgImage from './assets/background.jpg';
-import io from 'socket.io-client'; // Importer socket.io-client
-import { apiSlice } from './redux/slices/apiSlice'; // Importer apiSlice
+import io from 'socket.io-client';
+import { apiSlice } from './redux/slices/apiSlice';
 
-// On garde le thème de base
+// ... (le code du thème reste inchangé)
 let theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#FFD700', // Or Kevium
+      main: '#FFD700',
     },
     secondary: {
-      main: '#00BFFF', // Bleu Sci-fi
+      main: '#00BFFF',
     },
     info: {
       main: '#00BFFF',
@@ -37,8 +37,8 @@ let theme = createTheme({
   },
 });
 
-// On rend les polices du thème responsives
 theme = responsiveFontSizes(theme);
+
 
 const App = () => {
   const location = useLocation();
@@ -46,11 +46,9 @@ const App = () => {
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.auth);
 
-  // CORRECTION : Logique pour la mise à jour en temps réel
   useEffect(() => {
     let socket;
     if (userInfo) {
-      // Se connecter au serveur socket avec les infos de l'utilisateur
       socket = io(import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000', {
         auth: {
           userId: userInfo._id,
@@ -58,17 +56,24 @@ const App = () => {
         },
       });
 
-      // Écouter l'événement de mise à jour des robots
       socket.on('robots_updated', () => {
-        // Invalider le cache pour le tag 'Robot'. RTK Query va automatiquement
-        // rafraîchir toutes les requêtes qui fournissent ce tag.
         dispatch(apiSlice.util.invalidateTags(['Robot']));
         toast.info('Le marché des robots a été mis à jour !');
+      });
+      
+      // CORRECTION : Écouter l'événement de mise à jour des paramètres
+      socket.on('settings_updated', (data) => {
+        dispatch(apiSlice.util.invalidateTags(['Settings']));
+        const newRatePercent = (data.newRate * 100).toFixed(0);
+        if (newRatePercent > 0) {
+          toast.success(`Annonce : La commission sur les ventes est maintenant de ${newRatePercent}% !`);
+        } else {
+          toast.success(`Annonce : Profitez-en, il n'y a plus aucune commission sur les ventes ! 🎉`);
+        }
       });
 
     }
     
-    // Nettoyer la connexion quand le composant est démonté ou l'utilisateur se déconnecte
     return () => {
       if (socket) {
         socket.disconnect();
