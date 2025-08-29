@@ -15,6 +15,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import CategoryIcon from '@mui/icons-material/Category';
+import SettingsIcon from '@mui/icons-material/Settings'; // 1. Importer l'icône
 
 const style = {
   position: 'absolute',
@@ -34,6 +35,8 @@ const adminLinks = [
   { text: 'Gestion Utilisateurs', path: '/admin/userlist', icon: <PeopleIcon /> },
   { text: 'Gestion Robots', path: '/admin/robotlist', icon: <SmartToyIcon /> },
   { text: 'Gestion Catégories', path: '/admin/categorylist', icon: <CategoryIcon /> },
+  // 2. Ajouter le nouveau lien
+  { text: 'Paramètres du Jeu', path: '/admin/settings', icon: <SettingsIcon /> },
 ];
 
 const AdminNavModal = ({ open, handleClose }) => {

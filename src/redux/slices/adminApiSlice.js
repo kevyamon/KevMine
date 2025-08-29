@@ -1,5 +1,5 @@
 import { apiSlice } from './apiSlice';
-import { ADMIN_URL, USERS_URL } from '../constants'; // J'ajoute USERS_URL
+import { ADMIN_URL, USERS_URL } from '../constants';
 
 export const adminApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,12 +10,20 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       providesTags: ['Settings'],
       keepUnusedDataFor: 60,
     }),
-    // NOUVEAUX ENDPOINTS POUR LA GESTION UTILISATEUR
+    // NOUVELLE MUTATION POUR METTRE À JOUR LES PARAMÈTRES
+    updateGameSettings: builder.mutation({
+      query: (data) => ({
+        url: `${ADMIN_URL}/settings`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Settings'], // Rafraîchir les données après la mise à jour
+    }),
     getUsers: builder.query({
       query: () => ({
         url: `${ADMIN_URL}/users`,
       }),
-      providesTags: ['User'], // Utilise le tag 'User' pour rafraîchir la liste
+      providesTags: ['User'],
       keepUnusedDataFor: 5,
     }),
     deleteUser: builder.mutation({
@@ -44,6 +52,7 @@ export const adminApiSlice = apiSlice.injectEndpoints({
 
 export const {
   useGetGameSettingsQuery,
+  useUpdateGameSettingsMutation, // Exporter le nouveau hook
   useGetUsersQuery,
   useDeleteUserMutation,
   useUpdateUserMutation,
