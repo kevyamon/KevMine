@@ -6,7 +6,7 @@ import { logout } from '../redux/slices/authSlice';
 import { toast } from 'react-toastify';
 import {
   AppBar, Toolbar, Typography, Box, IconButton, Drawer, List,
-  ListItem, ListItemButton, ListItemIcon, ListItemText, TextField, InputAdornment,
+  ListItem, ListItemButton, ListItemIcon, ListItemText, TextField, InputAdornment, Tooltip,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LockIcon from '@mui/icons-material/Lock';
@@ -17,7 +17,9 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import SearchIcon from '@mui/icons-material/Search';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import AdminNavModal from './AdminNavModal'; // 1. Importer la nouvelle modale
+import HomeIcon from '@mui/icons-material/Home'; // 1. Importer l'icône Home
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'; // 2. Importer l'icône Back
+import AdminNavModal from './AdminNavModal';
 
 const Header = () => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -26,7 +28,7 @@ const Header = () => {
 
   const [logoutApiCall] = useLogoutMutation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false); // 2. Ajouter l'état pour la modale
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   const logoutHandler = async () => {
@@ -52,10 +54,9 @@ const Header = () => {
     setIsDrawerOpen(false);
   };
   
-  // 3. Nouvelle action pour ouvrir la modale
   const openAdminModal = () => {
-    setIsDrawerOpen(false); // Ferme le tiroir
-    setIsAdminModalOpen(true); // Ouvre la modale
+    setIsDrawerOpen(false);
+    setIsAdminModalOpen(true);
   };
 
   const loggedInLinks = [
@@ -63,7 +64,6 @@ const Header = () => {
     { text: 'Classement', path: '/leaderboard', icon: <LeaderboardIcon />, action: () => handleNavigate('/leaderboard') },
     { text: 'Marché', path: '/store', icon: <StorefrontIcon />, action: () => handleNavigate('/store') },
     ...(userInfo && userInfo.isAdmin
-      // 4. Mettre à jour l'action du bouton
       ? [{ text: 'Panel Admin', icon: <AdminPanelSettingsIcon />, action: openAdminModal }]
       : []),
     { text: 'Déconnexion', path: '/logout', icon: <LogoutIcon />, action: logoutHandler },
@@ -125,6 +125,22 @@ const Header = () => {
         }}
       >
         <Toolbar>
+          {/* 3. Ajouter les boutons conditionnels ici */}
+          {userInfo && (
+            <Box>
+              <Tooltip title="Retour">
+                <IconButton color="inherit" onClick={() => navigate(-1)}>
+                  <ArrowBackIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Accueil">
+                <IconButton color="inherit" onClick={() => navigate('/home')}>
+                  <HomeIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+
           <Typography
             variant="h6"
             component={Link}
@@ -134,6 +150,7 @@ const Header = () => {
               textDecoration: 'none',
               color: 'white',
               fontWeight: 'bold',
+              ml: 2, // Ajouter une marge à gauche pour l'espacement
             }}
           >
             KevMine
@@ -157,7 +174,6 @@ const Header = () => {
         {drawerContent}
       </Drawer>
       
-      {/* 5. Ajouter la modale ici pour qu'elle soit rendue */}
       <AdminNavModal open={isAdminModalOpen} handleClose={() => setIsAdminModalOpen(false)} />
     </>
   );
