@@ -14,6 +14,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import SearchIcon from '@mui/icons-material/Search';
+import { useNavigate } from 'react-router-dom'; // Importer useNavigate
 
 const ProfileScreen = () => {
   const { data: user, isLoading: isLoadingUser, error: userError } = useGetProfileQuery();
@@ -24,6 +25,7 @@ const ProfileScreen = () => {
   const [updateProfilePhoto, { isLoading: isUploadingPhoto }] = useUpdateProfilePhotoMutation();
 
   const [hangarSearchTerm, setHangarSearchTerm] = useState('');
+  const navigate = useNavigate(); // Initialiser useNavigate
 
   const uploadPhotoHandler = async (e) => {
     const file = e.target.files[0];
@@ -45,6 +47,11 @@ const ProfileScreen = () => {
       const res = await claimKevium().unwrap();
       toast.success(res.message);
     } catch (err) { toast.error(err?.data?.message || err.error); }
+  };
+
+  // Fonction pour naviguer vers le marché
+  const goToStore = () => {
+    navigate('/store');
   };
 
   if (isLoadingUser) {
@@ -70,13 +77,12 @@ const ProfileScreen = () => {
         {/* Colonne de gauche: Infos joueur et Quêtes */}
         <Grid item xs={12} md={8}>
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 4 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
-            {/* CORRECTION : La Box suivante est maintenant responsive */}
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
               gap: 3,
-              flexDirection: { xs: 'column', sm: 'row' }, // Empilement vertical sur mobile
-              textAlign: { xs: 'center', sm: 'left' }     // Centrage du texte sur mobile
+              flexDirection: { xs: 'column', sm: 'row' },
+              textAlign: { xs: 'center', sm: 'left' }
             }}>
               <Box sx={{ position: 'relative' }}>
                 <Avatar src={user?.photo} sx={{ width: 100, height: 100, border: '2px solid', borderColor: 'primary.main' }}>
@@ -96,7 +102,7 @@ const ProfileScreen = () => {
             <Typography variant="h5" component="h2" color="primary.main" sx={{ 
               mt: 3, 
               fontWeight: 'bold',
-              textAlign: { xs: 'center', sm: 'left' } // Centrage du solde sur mobile
+              textAlign: { xs: 'center', sm: 'left' }
             }}>
               Solde : {user?.keviumBalance.toLocaleString()} KVM
             </Typography>
@@ -105,7 +111,8 @@ const ProfileScreen = () => {
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 4 }, mt: 4, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)', textAlign: 'center' }}>
             <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>Minage en Cours</Typography>
             <Typography variant="h4" color="secondary.main" sx={{ my: 2 }}>{unclaimed.toFixed(8)} KVM</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Gains non réclamés</Typography>
+            {/* TEXTE SECONDAIRE EN BLANC */}
+            <Typography variant="body2" color="white" sx={{ mb: 2 }}>Gains non réclamés</Typography>
             <Button variant="contained" color="secondary" size="large" onClick={handleClaim} disabled={isClaiming || unclaimed < 0.00000001}>
               {isClaiming ? <CircularProgress size={26} /> : 'Réclamer mes KVM'}
             </Button>
@@ -126,9 +133,10 @@ const ProfileScreen = () => {
                 {sortedPurchaseHistory.length > 0 ? sortedPurchaseHistory.map((item, index) => (
                   <ListItem key={`purchase-${index}`} sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                     <ListItemText primary={`${item.robotName} - ${item.price} KVM`} />
-                    <Typography variant="caption" color="text.secondary">{new Date(item.purchaseDate).toLocaleString()}</Typography>
+                    {/* TEXTE SECONDAIRE EN BLANC */}
+                    <Typography variant="caption" color="white">{new Date(item.purchaseDate).toLocaleString()}</Typography>
                   </ListItem>
-                )) : <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>Aucun achat récent.</Typography>}
+                )) : <Typography variant="body2" color="white" sx={{ p: 2 }}>Aucun achat récent.</Typography>} {/* TEXTE SECONDAIRE EN BLANC */}
               </List>
             </Box>
             <Divider sx={{ my: 2 }} />
@@ -138,9 +146,10 @@ const ProfileScreen = () => {
                 {sortedSalesHistory.length > 0 ? sortedSalesHistory.map((item, index) => (
                   <ListItem key={`sale-${index}`} sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                     <ListItemText primary={`${item.robotName} - Gain: ${item.userRevenue} KVM`} secondary={`(Vendu ${item.salePrice} KVM)`}/>
-                    <Typography variant="caption" color="text.secondary">{new Date(item.saleDate).toLocaleString()}</Typography>
+                    {/* TEXTE SECONDAIRE EN BLANC */}
+                    <Typography variant="caption" color="white">{new Date(item.saleDate).toLocaleString()}</Typography>
                   </ListItem>
-                )) : <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>Aucune vente récente.</Typography>}
+                )) : <Typography variant="body2" color="white" sx={{ p: 2 }}>Aucune vente récente.</Typography>} {/* TEXTE SECONDAIRE EN BLANC */}
               </List>
             </Box>
           </Paper>
@@ -172,9 +181,26 @@ const ProfileScreen = () => {
                   ))}
                 </Grid>
               ) : (
-                <Typography color="text.secondary" sx={{ textAlign: 'center', p: 2 }}>
-                  {user?.inventory?.length > 0 ? 'Aucun robot ne correspond à votre recherche.' : 'Vous ne possédez aucun robot. Visitez le marché !'}
-                </Typography>
+                <Box sx={{ textAlign: 'center', p: 2 }}>
+                  {/* TEXTE SECONDAIRE EN BLANC */}
+                  <Typography color="white" sx={{ mb: 2 }}>
+                    {user?.inventory?.length > 0 ? 'Aucun robot ne correspond à votre recherche.' : 'Vous ne possédez aucun robot.'}
+                  </Typography>
+                  {/* BOUTON ROUGE POUR LE MARCHÉ */}
+                  <Button
+                    variant="contained"
+                    color="error"
+                    onClick={goToStore}
+                    sx={{
+                      fontWeight: 'bold',
+                      '&:hover': {
+                        backgroundColor: 'darkred',
+                      },
+                    }}
+                  >
+                    Visitez le marché !
+                  </Button>
+                </Box>
               )}
             </Paper>
           </Box>
