@@ -89,7 +89,8 @@ const App = () => {
     backgroundAttachment: 'fixed',
     backgroundImage: isLandingPage ? 'none' : `url(${bgImage})`,
     backgroundColor: '#000',
-    // CORRECTION : On transforme la Box principale en conteneur flex vertical
+    // CORRECTION DÉFINITIVE :
+    // On s'assure que ce conteneur principal se comporte comme une colonne flexible
     display: 'flex',
     flexDirection: 'column',
   };
@@ -100,7 +101,9 @@ const App = () => {
       <Box sx={appStyle}>
         <Header />
         <ToastContainer theme="dark" />
-        {/* CORRECTION : On force la balise <main> à prendre toute la place restante */}
+        {/* CORRECTION DÉFINITIVE :
+            On force la balise <main> à prendre toute la place verticale restante (flex: 1)
+            et à se comporter elle-même comme une colonne flexible. */}
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Outlet />
         </main>
