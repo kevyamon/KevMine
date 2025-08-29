@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Container, Typography, Box, Paper, TextField, Button,
   CircularProgress, Alert, FormControlLabel, Checkbox, Select,
-  MenuItem, InputLabel, FormControl, Grid // <-- L'IMPORT MANQUANT EST AJOUTÉ ICI
+  MenuItem, InputLabel, FormControl, Grid
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import {
@@ -11,6 +11,7 @@ import {
   useUpdateRobotMutation,
 } from '../../redux/slices/robotsApiSlice';
 import { useGetCategoriesQuery } from '../../redux/slices/categoryApiSlice';
+import { useUploadRobotImageMutation } from '../../redux/slices/uploadApiSlice'; // 1. Importer la nouvelle mutation
 
 const RobotEditScreen = () => {
   const { id: robotId } = useParams();
@@ -32,6 +33,7 @@ const RobotEditScreen = () => {
   const { data: robot, isLoading, error } = useGetRobotDetailsQuery(robotId);
   const { data: categories, isLoading: isLoadingCategories } = useGetCategoriesQuery();
   const [updateRobot, { isLoading: isUpdating }] = useUpdateRobotMutation();
+  const [uploadRobotImage, { isLoading: isUploading }] = useUploadRobotImageMutation(); // 2. Initialiser le hook
 
   useEffect(() => {
     if (robot) {
@@ -56,6 +58,19 @@ const RobotEditScreen = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+  };
+
+  // 3. Créer la fonction pour gérer l'upload
+  const uploadFileHandler = async (e) => {
+    const formData = new FormData();
+    formData.append('image', e.target.files[0]);
+    try {
+      const res = await uploadRobotImage(formData).unwrap();
+      toast.success(res.message);
+      setFormData((prev) => ({ ...prev, icon: res.image }));
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
+    }
   };
 
   const submitHandler = async (e) => {
@@ -97,9 +112,17 @@ const RobotEditScreen = () => {
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Stock" name="stock" type="number" value={formData.stock} onChange={handleChange} required />
               </Grid>
+
+              {/* 4. Remplacer l'ancien champ 'icon' par le nouveau système */}
               <Grid item xs={12}>
                 <TextField fullWidth label="URL de l'icône" name="icon" value={formData.icon} onChange={handleChange} required />
+                <Button component="label" variant="contained" sx={{mt: 1}}>
+                  Choisir un fichier
+                  <input type="file" hidden onChange={uploadFileHandler} />
+                </Button>
+                {isUploading && <CircularProgress />}
               </Grid>
+              
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
                   <InputLabel>Rareté</InputLabel>

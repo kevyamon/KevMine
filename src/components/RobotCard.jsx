@@ -10,7 +10,7 @@ import {
   useUpgradeRobotMutation,
   useSellRobotMutation,
 } from '../redux/slices/robotsApiSlice';
-import { useGetGameSettingsQuery } from '../redux/slices/adminApiSlice'; // Importer le hook des paramètres
+import { useGetGameSettingsQuery } from '../redux/slices/adminApiSlice';
 import SellIcon from '@mui/icons-material/Sell';
 import UpgradeIcon from '@mui/icons-material/Upgrade';
 
@@ -34,7 +34,7 @@ const RobotCard = ({ robot }) => {
   const [purchaseRobot, { isLoading: isPurchasing }] = usePurchaseRobotMutation();
   const [upgradeRobot, { isLoading: isUpgrading }] = useUpgradeRobotMutation();
   const [sellRobot, { isLoading: isSelling }] = useSellRobotMutation();
-  const { data: settings } = useGetGameSettingsQuery(); // Récupérer les paramètres du jeu
+  const { data: settings } = useGetGameSettingsQuery();
 
   const [isSellModalOpen, setSellModalOpen] = useState(false);
 
@@ -44,7 +44,6 @@ const RobotCard = ({ robot }) => {
   const handleOpenSellModal = () => setSellModalOpen(true);
   const handleCloseSellModal = () => setSellModalOpen(false);
 
-  // Logique de calcul pour la fenêtre de vente
   const saleCalculations = useMemo(() => {
     if (!isInInventory || !settings) return null;
     const investedValue = robot.investedKevium;
@@ -87,13 +86,14 @@ const RobotCard = ({ robot }) => {
         <CardContent sx={{ flexGrow: 1 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography gutterBottom variant="h5" component="div" fontWeight="bold">{robot.name}</Typography>
-            {isInInventory && <Chip label={`Niv. ${robot.level}`} color="secondary" />}
+            {/* CORRECTION : Affiche le niveau si le robot est dans l'inventaire OU si c'est une revente ET que le niveau > 1 */}
+            {(isInInventory || isPlayerSale) && robot.level > 1 && <Chip label={`Niv. ${robot.level}`} color="secondary" />}
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 2, gap: 1, flexWrap: 'wrap' }}>
             <RarityChip label={robot.rarity} rarity={robot.rarity} size="small" />
             {robot.category && <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>{robot.category.name}</Typography>}
             {isPlayerSale && <Chip label="Revente Joueur" color="warning" size="small" variant="outlined" />}
-            {robot.isSponsored && <Chip label="Sponsorisé" color="primary" size="small" variant="outlined" sx={{ ml: 'auto' }} />}
+            {robot.isSponsored && !isPlayerSale && <Chip label="Sponsorisé" color="primary" size="small" variant="outlined" sx={{ ml: 'auto' }} />}
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Puissance de minage : {robot.miningPower} KVM/h</Typography>
           {isInInventory ? (

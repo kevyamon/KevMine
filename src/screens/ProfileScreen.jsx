@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Typography, Container, Box, Paper, Grid, CircularProgress,
   Alert, Button, List, ListItem, ListItemText, Divider, Avatar, IconButton,
+  TextField, InputAdornment
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
@@ -12,6 +13,7 @@ import QuestsList from '../components/QuestsList';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import SearchIcon from '@mui/icons-material/Search';
 
 const ProfileScreen = () => {
   const { data: user, isLoading: isLoadingUser, error: userError } = useGetProfileQuery();
@@ -20,6 +22,8 @@ const ProfileScreen = () => {
   });
   const [claimKevium, { isLoading: isClaiming }] = useClaimKeviumMutation();
   const [updateProfilePhoto, { isLoading: isUploadingPhoto }] = useUpdateProfilePhotoMutation();
+
+  const [hangarSearchTerm, setHangarSearchTerm] = useState('');
 
   const uploadPhotoHandler = async (e) => {
     const file = e.target.files[0];
@@ -56,13 +60,24 @@ const ProfileScreen = () => {
   const sortedPurchaseHistory = user?.purchaseHistory ? [...user.purchaseHistory].reverse() : [];
   const sortedSalesHistory = user?.salesHistory ? [...user.salesHistory].reverse() : [];
 
+  const filteredInventory = user?.inventory?.filter(robot => 
+    robot.name.toLowerCase().includes(hangarSearchTerm.toLowerCase())
+  );
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, px: { xs: 2, sm: 3 } }}>
       <Grid container spacing={4}>
         {/* Colonne de gauche: Infos joueur et Quêtes */}
         <Grid item xs={12} md={8}>
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 4 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            {/* CORRECTION : La Box suivante est maintenant responsive */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 3,
+              flexDirection: { xs: 'column', sm: 'row' }, // Empilement vertical sur mobile
+              textAlign: { xs: 'center', sm: 'left' }     // Centrage du texte sur mobile
+            }}>
               <Box sx={{ position: 'relative' }}>
                 <Avatar src={user?.photo} sx={{ width: 100, height: 100, border: '2px solid', borderColor: 'primary.main' }}>
                   {user?.name.charAt(0)}
@@ -78,7 +93,13 @@ const ProfileScreen = () => {
                 {user?.phone && <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>Téléphone: {user.phone}</Typography>}
               </Box>
             </Box>
-            <Typography variant="h5" component="h2" color="primary.main" sx={{ mt: 3, fontWeight: 'bold' }}>Solde : {user?.keviumBalance.toLocaleString()} KVM</Typography>
+            <Typography variant="h5" component="h2" color="primary.main" sx={{ 
+              mt: 3, 
+              fontWeight: 'bold',
+              textAlign: { xs: 'center', sm: 'left' } // Centrage du solde sur mobile
+            }}>
+              Solde : {user?.keviumBalance.toLocaleString()} KVM
+            </Typography>
           </Paper>
 
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 4 }, mt: 4, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)', textAlign: 'center' }}>
@@ -99,7 +120,6 @@ const ProfileScreen = () => {
         <Grid item xs={12} md={4}>
           <Paper elevation={6} sx={{ p: { xs: 2, sm: 3 }, backgroundColor: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.12)', mb: 4 }}>
             <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>Historique des Transactions</Typography>
-            {/* CORRECTION : Ajout d'une Box avec maxHeight et overflowY pour le scroll */}
             <Box sx={{ maxHeight: '220px', overflowY: 'auto', pr: 1 }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><ShoppingCartIcon /> Achats</Typography>
               <List dense>
@@ -112,7 +132,6 @@ const ProfileScreen = () => {
               </List>
             </Box>
             <Divider sx={{ my: 2 }} />
-            {/* CORRECTION : Ajout d'une Box avec maxHeight et overflowY pour le scroll */}
             <Box sx={{ maxHeight: '220px', overflowY: 'auto', pr: 1 }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><PointOfSaleIcon /> Ventes</Typography>
               <List dense>
@@ -128,17 +147,36 @@ const ProfileScreen = () => {
           
           <Box>
             <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold' }}>Mon Hangar à Robots</Typography>
-            {user?.inventory?.length > 0 ? (
-              <Grid container spacing={4}>
-                {user.inventory.map((robot) => (
-                  <Grid item key={robot._id} xs={12}>
-                    <RobotCard robot={robot} />
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Typography color="text.secondary">Vous ne possédez aucun robot. Visitez le <a href="/store" style={{ color: '#FFD700' }}>marché</a> !</Typography>
-            )}
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Rechercher un robot..."
+              value={hangarSearchTerm}
+              onChange={(e) => setHangarSearchTerm(e.target.value)}
+              sx={{ mb: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Paper elevation={3} sx={{ p: 2, maxHeight: '600px', overflowY: 'auto', backgroundColor: 'transparent', border: '1px solid rgba(255, 255, 255, 0.12)'}}>
+              {filteredInventory && filteredInventory.length > 0 ? (
+                <Grid container spacing={4}>
+                  {filteredInventory.map((robot) => (
+                    <Grid item key={robot._id} xs={12}>
+                      <RobotCard robot={robot} />
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Typography color="text.secondary" sx={{ textAlign: 'center', p: 2 }}>
+                  {user?.inventory?.length > 0 ? 'Aucun robot ne correspond à votre recherche.' : 'Vous ne possédez aucun robot. Visitez le marché !'}
+                </Typography>
+              )}
+            </Paper>
           </Box>
         </Grid>
       </Grid>
