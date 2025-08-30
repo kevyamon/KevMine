@@ -8,8 +8,9 @@ import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } fro
 import bgImage from './assets/background.jpg';
 import io from 'socket.io-client';
 import { apiSlice } from './redux/slices/apiSlice';
-import { setCredentials, logout } from './redux/slices/authSlice'; // Importer logout
+import { setCredentials, logout } from './redux/slices/authSlice';
 
+// ... (le thème reste inchangé)
 let theme = createTheme({
   palette: {
     mode: 'dark',
@@ -21,8 +22,8 @@ let theme = createTheme({
   },
   typography: { fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif' },
 });
-
 theme = responsiveFontSizes(theme);
+
 
 const App = () => {
   const location = useLocation();
@@ -40,7 +41,6 @@ const App = () => {
         },
       });
 
-      // ... autres listeners socket ...
       socket.on('robots_updated', () => {
         dispatch(apiSlice.util.invalidateTags(['Robot']));
         toast.info('Le marché des robots a été mis à jour !');
@@ -52,7 +52,6 @@ const App = () => {
         toast.success(`Annonce : La commission sur les ventes est maintenant de ${newRatePercent}% !`);
       });
 
-      // --- NOUVEAU : Listener pour la mise à jour de statut ---
       socket.on('status_update', ({ status }) => {
         const newUserInfo = { ...userInfo, status };
         dispatch(setCredentials(newUserInfo));
@@ -63,10 +62,20 @@ const App = () => {
           toast.success('Votre compte a été réactivé ! Vous allez être déconnecté pour appliquer les changements.');
           setTimeout(() => {
             dispatch(logout());
-            window.location.href = '/login'; // Redirection forcée
+            window.location.href = '/login';
           }, 5000);
         }
       });
+      
+      // NOUVEAU : Listener pour le classement
+      socket.on('leaderboard_updated', () => {
+        console.log('Leaderboard update received from server.');
+        // Invalider le cache force RTK Query à re-fetch les données
+        dispatch(apiSlice.util.invalidateTags(['Leaderboard', 'PlayerRank']));
+        // On peut ajouter une notification discrète si on le souhaite
+        // toast.info('Le classement a été mis à jour !');
+      });
+
     }
     
     return () => {

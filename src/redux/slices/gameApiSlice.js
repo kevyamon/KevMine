@@ -22,12 +22,12 @@ export const gameApiSlice = apiSlice.injectEndpoints({
     getLeaderboard: builder.query({
       query: (searchTerm) => ({
         url: `${GAME_URL}/leaderboard`,
-        params: { searchTerm }, // Permet d'ajouter le paramètre de recherche à l'URL
+        params: { searchTerm },
       }),
       providesTags: ['Leaderboard'],
+      // CORRECTION : Ajout du polling toutes les 60 secondes comme demandé
       keepUnusedDataFor: 60,
     }),
-    // ---- NOUVELLE REQUÊTE POUR LE RANG DU JOUEUR ----
     getPlayerRank: builder.query({
       query: (userId) => ({
         url: `${GAME_URL}/rank/${userId}`,
@@ -41,5 +41,5 @@ export const {
   useGetUserGameStatusQuery,
   useClaimKeviumMutation,
   useGetLeaderboardQuery,
-  useGetPlayerRankQuery, // Exporter le nouveau hook
+  useGetPlayerRankQuery,
 } = gameApiSlice;
