@@ -19,7 +19,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const LoginScreen = () => {
-  const [identifier, setIdentifier] = useState(''); // Changé de 'email' à 'identifier'
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,6 +32,8 @@ const LoginScreen = () => {
 
   useEffect(() => {
     if (userInfo) {
+      // Si l'utilisateur est déjà connecté, on le redirige
+      // PrivateRoutes se chargera de l'envoyer vers /banned si nécessaire
       navigate('/home');
     }
   }, [navigate, userInfo]);
@@ -39,11 +41,22 @@ const LoginScreen = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-      const res = await login({ identifier, password }).unwrap(); // Utilisation de 'identifier'
+      const res = await login({ identifier, password }).unwrap();
       dispatch(setCredentials({ ...res }));
       navigate('/home');
     } catch (err) {
-      toast.error(err?.data?.message || err.error);
+      // --- DÉBUT DE LA CORRECTION ---
+      // Si l'erreur est une erreur de statut (banni/suspendu)...
+      if (err.status === 403 && err.data?.userInfo) {
+        // 1. On stocke les infos de l'utilisateur banni dans l'état Redux
+        dispatch(setCredentials(err.data.userInfo));
+        // 2. On redirige vers la page de bannissement
+        navigate('/banned');
+      } else {
+        // Pour toutes les autres erreurs, on affiche une notification
+        toast.error(err?.data?.message || err.error);
+      }
+      // --- FIN DE LA CORRECTION ---
     }
   };
 
@@ -58,10 +71,10 @@ const LoginScreen = () => {
             margin="normal"
             required
             fullWidth
-            id="identifier" // Changé l'ID
-            label="Email, Nom d'utilisateur ou Téléphone" // Nouveau libellé
-            name="identifier" // Changé le nom
-            autoComplete="username" // Suggestion pour la compatibilité des navigateurs
+            id="identifier"
+            label="Email, Nom d'utilisateur ou Téléphone"
+            name="identifier"
+            autoComplete="username"
             autoFocus
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
