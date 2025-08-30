@@ -10,14 +10,13 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       providesTags: ['Settings'],
       keepUnusedDataFor: 60,
     }),
-    // NOUVELLE MUTATION POUR METTRE À JOUR LES PARAMÈTRES
     updateGameSettings: builder.mutation({
       query: (data) => ({
         url: `${ADMIN_URL}/settings`,
         method: 'PUT',
         body: data,
       }),
-      invalidatesTags: ['Settings'], // Rafraîchir les données après la mise à jour
+      invalidatesTags: ['Settings'],
     }),
     getUsers: builder.query({
       query: () => ({
@@ -47,14 +46,24 @@ export const adminApiSlice = apiSlice.injectEndpoints({
         }),
         keepUnusedDataFor: 5,
     }),
+    // NOUVELLE MUTATION POUR ACCORDER UN BONUS
+    grantBonus: builder.mutation({
+      query: (data) => ({
+        url: `${ADMIN_URL}/users/grant-bonus`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['User'], // Invalider les utilisateurs pour rafraîchir les soldes
+    }),
   }),
 });
 
 export const {
   useGetGameSettingsQuery,
-  useUpdateGameSettingsMutation, // Exporter le nouveau hook
+  useUpdateGameSettingsMutation,
   useGetUsersQuery,
   useDeleteUserMutation,
   useUpdateUserMutation,
   useGetUserDetailsQuery,
+  useGrantBonusMutation, // Exporter le nouveau hook
 } = adminApiSlice;

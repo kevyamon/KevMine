@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react'; // 1. Importer useState
 import { Outlet, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
@@ -9,8 +9,9 @@ import bgImage from './assets/background.jpg';
 import io from 'socket.io-client';
 import { apiSlice } from './redux/slices/apiSlice';
 import { setCredentials, logout } from './redux/slices/authSlice';
+import BonusNotificationModal from './components/BonusNotificationModal'; // 2. Importer la nouvelle modale
+import BonusModal from './components/BonusModal'; // Importer la modale de bonus admin
 
-// ... (le thème reste inchangé)
 let theme = createTheme({
   palette: {
     mode: 'dark',
@@ -24,12 +25,16 @@ let theme = createTheme({
 });
 theme = responsiveFontSizes(theme);
 
-
 const App = () => {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
   const dispatch = useDispatch();
   const { userInfo } = useSelector((state) => state.auth);
+
+  // 3. États pour gérer les modales
+  const [bonusData, setBonusData] = useState(null);
+  const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
+  const [isAdminBonusModalOpen, setIsAdminBonusModalOpen] = useState(false);
 
   useEffect(() => {
     let socket;
@@ -55,7 +60,6 @@ const App = () => {
       socket.on('status_update', ({ status }) => {
         const newUserInfo = { ...userInfo, status };
         dispatch(setCredentials(newUserInfo));
-
         if (status === 'banned' || status === 'suspended') {
           toast.error(`Votre compte a été ${status === 'banned' ? 'banni' : 'suspendu'}.`);
         } else if (status === 'active') {
@@ -67,13 +71,19 @@ const App = () => {
         }
       });
       
-      // NOUVEAU : Listener pour le classement
       socket.on('leaderboard_updated', () => {
-        console.log('Leaderboard update received from server.');
-        // Invalider le cache force RTK Query à re-fetch les données
         dispatch(apiSlice.util.invalidateTags(['Leaderboard', 'PlayerRank']));
-        // On peut ajouter une notification discrète si on le souhaite
-        // toast.info('Le classement a été mis à jour !');
+      });
+
+      // 4. NOUVEAU : Listener pour les bonus
+      socket.on('bonus_granted', (data) => {
+        setBonusData(data);
+        setIsBonusModalOpen(true);
+        // Mettre à jour le solde dans le state Redux instantanément
+        const updatedUserInfo = { ...userInfo, keviumBalance: data.keviumBalance };
+        dispatch(setCredentials(updatedUserInfo));
+        // Invalider le cache pour que le prochain fetch soit à jour
+        dispatch(apiSlice.util.invalidateTags(['User']));
       });
 
     }
@@ -82,6 +92,19 @@ const App = () => {
       if (socket) socket.disconnect();
     };
   }, [userInfo, dispatch]);
+  
+  const handleCloseBonusModal = () => {
+    setIsBonusModalOpen(false);
+    setBonusData(null);
+  };
+  
+  const handleOpenAdminBonusModal = () => {
+    setIsAdminBonusModalOpen(true);
+  };
+  
+  const handleCloseAdminBonusModal = () => {
+    setIsAdminBonusModalOpen(false);
+  };
 
   const appStyle = {
     minHeight: '100vh',
@@ -100,11 +123,23 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={appStyle}>
-        <Header />
+        <Header onBonusClick={handleOpenAdminBonusModal} /> {/* Passer la fonction d'ouverture */}
         <ToastContainer theme="dark" position="bottom-right" />
         <main style={{ flex: 1 }}>
           <Outlet />
         </main>
+        {/* 5. Afficher les modales */}
+        <BonusNotificationModal 
+          open={isBonusModalOpen} 
+          onClose={handleCloseBonusModal} 
+          bonusData={bonusData} 
+        />
+        {userInfo?.isSuperAdmin && (
+          <BonusModal
+            open={isAdminBonusModalOpen}
+            handleClose={handleCloseAdminBonusModal}
+          />
+        )}
       </Box>
     </ThemeProvider>
   );

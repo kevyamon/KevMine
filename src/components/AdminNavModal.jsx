@@ -15,7 +15,8 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import CategoryIcon from '@mui/icons-material/Category';
-import SettingsIcon from '@mui/icons-material/Settings'; // 1. Importer l'icône
+import SettingsIcon from '@mui/icons-material/Settings';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard'; // NOUVEAU : Importer l'icône
 
 const style = {
   position: 'absolute',
@@ -30,22 +31,23 @@ const style = {
   borderRadius: 2,
 };
 
-const adminLinks = [
-  { text: 'Tableau de Bord', path: '/admin/dashboard', icon: <DashboardIcon /> },
-  { text: 'Gestion Utilisateurs', path: '/admin/userlist', icon: <PeopleIcon /> },
-  { text: 'Gestion Robots', path: '/admin/robotlist', icon: <SmartToyIcon /> },
-  { text: 'Gestion Catégories', path: '/admin/categorylist', icon: <CategoryIcon /> },
-  // 2. Ajouter le nouveau lien
-  { text: 'Paramètres du Jeu', path: '/admin/settings', icon: <SettingsIcon /> },
-];
-
-const AdminNavModal = ({ open, handleClose }) => {
+const AdminNavModal = ({ open, handleClose, onBonusClick }) => { // 1. Accepter la prop onBonusClick
   const navigate = useNavigate();
 
   const handleNavigate = (path) => {
     navigate(path);
     handleClose();
   };
+  
+  // 2. Créer les liens avec leurs actions
+  const adminLinks = [
+    { text: 'Tableau de Bord', icon: <DashboardIcon />, action: () => handleNavigate('/admin/dashboard') },
+    { text: 'Gestion Utilisateurs', icon: <PeopleIcon />, action: () => handleNavigate('/admin/userlist') },
+    { text: 'Gestion Robots', icon: <SmartToyIcon />, action: () => handleNavigate('/admin/robotlist') },
+    { text: 'Gestion Catégories', icon: <CategoryIcon />, action: () => handleNavigate('/admin/categorylist') },
+    { text: 'Paramètres du Jeu', icon: <SettingsIcon />, action: () => handleNavigate('/admin/settings') },
+    { text: 'Offrir un Bonus', icon: <CardGiftcardIcon />, action: onBonusClick }, // 3. Lier l'action
+  ];
 
   return (
     <Modal open={open} onClose={handleClose}>
@@ -57,7 +59,7 @@ const AdminNavModal = ({ open, handleClose }) => {
         <List>
           {adminLinks.map((link) => (
             <ListItem key={link.text} disablePadding>
-              <ListItemButton onClick={() => handleNavigate(link.path)}>
+              <ListItemButton onClick={link.action}>
                 <ListItemIcon>{link.icon}</ListItemIcon>
                 <ListItemText primary={link.text} />
               </ListItemButton>
