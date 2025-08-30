@@ -8,7 +8,7 @@ import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } fro
 import bgImage from './assets/background.jpg';
 import io from 'socket.io-client';
 import { apiSlice } from './redux/slices/apiSlice';
-import { setCredentials, logout, hideWelcome } from './redux/slices/authSlice';
+import { setCredentials, logout, hideWelcome } from './redux/slices/authSlice'; // Import `hideWelcome`
 import BonusNotificationModal from './components/BonusNotificationModal';
 import BonusModal from './components/BonusModal';
 import SplashScreen from './components/SplashScreen';
@@ -55,18 +55,52 @@ const App = () => {
         },
       });
 
-      socket.on('robots_updated', () => { dispatch(apiSlice.util.invalidateTags(['Robot'])); toast.info('Le marché des robots a été mis à jour !'); });
-      socket.on('settings_updated', (data) => { dispatch(apiSlice.util.invalidateTags(['Settings'])); const newRatePercent = (data.newRate * 100).toFixed(0); toast.success(`Annonce : La commission sur les ventes est maintenant de ${newRatePercent}% !`); });
-      socket.on('status_update', ({ status }) => { const newUserInfo = { ...userInfo, status }; dispatch(setCredentials(newUserInfo)); if (status === 'banned' || status === 'suspended') { toast.error(`Votre compte a été ${status === 'banned' ? 'banni' : 'suspendu'}.`); } else if (status === 'active') { toast.success('Votre compte a été réactivé ! Vous allez être déconnecté pour appliquer les changements.'); setTimeout(() => { dispatch(logout()); window.location.href = '/login'; }, 5000); } });
-      socket.on('leaderboard_updated', () => { dispatch(apiSlice.util.invalidateTags(['Leaderboard', 'PlayerRank'])); });
-      socket.on('bonus_granted', (data) => { setBonusData(data); setIsBonusModalOpen(true); const updatedUserInfo = { ...userInfo, keviumBalance: data.keviumBalance }; dispatch(setCredentials(updatedUserInfo)); dispatch(apiSlice.util.invalidateTags(['User'])); });
+      socket.on('robots_updated', () => {
+        dispatch(apiSlice.util.invalidateTags(['Robot']));
+        toast.info('Le marché des robots a été mis à jour !');
+      });
       
-      // NOUVEAU : Listener pour les notifications
+      socket.on('settings_updated', (data) => {
+        dispatch(apiSlice.util.invalidateTags(['Settings']));
+        const newRatePercent = (data.newRate * 100).toFixed(0);
+        toast.success(`Annonce : La commission sur les ventes est maintenant de ${newRatePercent}% !`);
+      });
+
+      socket.on('status_update', ({ status }) => {
+        const newUserInfo = { ...userInfo, status };
+        dispatch(setCredentials(newUserInfo));
+        if (status === 'banned' || status === 'suspended') {
+          toast.error(`Votre compte a été ${status === 'banned' ? 'banni' : 'suspendu'}.`);
+        } else if (status === 'active') {
+          toast.success('Votre compte a été réactivé ! Vous allez être déconnecté pour appliquer les changements.');
+          setTimeout(() => {
+            dispatch(logout());
+            window.location.href = '/login';
+          }, 5000);
+        }
+      });
+      
+      socket.on('leaderboard_updated', () => {
+        dispatch(apiSlice.util.invalidateTags(['Leaderboard', 'PlayerRank']));
+      });
+
+      socket.on('bonus_granted', (data) => {
+        setBonusData(data);
+        setIsBonusModalOpen(true);
+        const updatedUserInfo = { ...userInfo, keviumBalance: data.keviumBalance };
+        dispatch(setCredentials(updatedUserInfo));
+        dispatch(apiSlice.util.invalidateTags(['User']));
+      });
+
+      // --- DÉBUT DE LA MODIFICATION ---
+      // Listener pour les notifications
       socket.on('new_notification', (notification) => {
         toast.info(`🔔 Nouvelle notification : ${notification.message}`);
         // Invalider le cache des notifications pour forcer le rafraîchissement du compteur
         dispatch(apiSlice.util.invalidateTags(['Notification']));
       });
+      // --- FIN DE LA MODIFICATION ---
+
     }
     
     return () => {
@@ -74,24 +108,62 @@ const App = () => {
     };
   }, [userInfo, dispatch]);
   
-  const handleCloseBonusModal = () => { setIsBonusModalOpen(false); setBonusData(null); };
-  const handleOpenAdminBonusModal = () => { setIsAdminBonusModalOpen(true); };
-  const handleCloseAdminBonusModal = () => { setIsAdminBonusModalOpen(false); };
-
-  const appStyle = { minHeight: '100vh', width: '100%', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed', backgroundImage: isLandingPage ? 'none' : `url(${bgImage})`, backgroundColor: '#000', display: 'flex', flexDirection: 'column', opacity: showSplash ? 0 : 1, transition: 'opacity 0.5s ease-in-out' };
+  const handleCloseBonusModal = () => {
+    setIsBonusModalOpen(false);
+    setBonusData(null);
+  };
   
-  if (showSplash) return <SplashScreen />;
+  const handleOpenAdminBonusModal = () => {
+    setIsAdminBonusModalOpen(true);
+  };
+  
+  const handleCloseAdminBonusModal = () => {
+    setIsAdminBonusModalOpen(false);
+  };
+
+  const appStyle = {
+    minHeight: '100vh',
+    width: '100%',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundAttachment: 'fixed',
+    backgroundImage: isLandingPage ? 'none' : `url(${bgImage})`,
+    backgroundColor: '#000',
+    display: 'flex',
+    flexDirection: 'column',
+    opacity: showSplash ? 0 : 1, // Cache le contenu principal pendant le splash
+    transition: 'opacity 0.5s ease-in-out',
+  };
+  
+  if (showSplash) {
+    return <SplashScreen />;
+  }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={appStyle}>
-        {showWelcome && userInfo && (<WelcomeTransition isNewUser={userInfo.isNewUser} userName={userInfo.name} />)}
+        {showWelcome && userInfo && (
+          <WelcomeTransition isNewUser={userInfo.isNewUser} userName={userInfo.name} />
+        )}
+        
         <Header onBonusClick={handleOpenAdminBonusModal} />
         <ToastContainer theme="dark" position="bottom-right" />
-        <main style={{ flex: 1 }}><Outlet /></main>
-        <BonusNotificationModal open={isBonusModalOpen} onClose={handleCloseBonusModal} bonusData={bonusData} />
-        {userInfo?.isSuperAdmin && (<BonusModal open={isAdminBonusModalOpen} handleClose={handleCloseAdminBonusModal} />)}
+        <main style={{ flex: 1 }}>
+          <Outlet />
+        </main>
+        <BonusNotificationModal 
+          open={isBonusModalOpen} 
+          onClose={handleCloseBonusModal} 
+          bonusData={bonusData} 
+        />
+        {userInfo?.isSuperAdmin && (
+          <BonusModal
+            open={isAdminBonusModalOpen}
+            handleClose={handleCloseAdminBonusModal}
+          />
+        )}
       </Box>
     </ThemeProvider>
   );
