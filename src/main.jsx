@@ -20,6 +20,7 @@ import ProfileScreen from './screens/ProfileScreen.jsx';
 import RobotStoreScreen from './screens/RobotStoreScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 import BannedScreen from './screens/BannedScreen.jsx';
+import NotificationsScreen from './screens/NotificationsScreen.jsx'; // 1. Importer le nouvel écran
 
 // Route Guards
 import PrivateRoutes from './components/PrivateRoutes.jsx';
@@ -37,7 +38,6 @@ import GameSettingsScreen from './screens/admin/GameSettingsScreen.jsx';
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      {/* CORRECTION : Routes avec le layout principal (Header, etc.) */}
       <Route path="/" element={<App />}>
         {/* Routes Publiques */}
         <Route index={true} path="/" element={<LandingScreen />} />
@@ -50,6 +50,7 @@ const router = createBrowserRouter(
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/store" element={<RobotStoreScreen />} />
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
+          <Route path="/notifications" element={<NotificationsScreen />} /> {/* 2. Ajouter la nouvelle route */}
         </Route>
 
         {/* Routes Admin */}
@@ -63,8 +64,7 @@ const router = createBrowserRouter(
           <Route path="/admin/settings" element={<GameSettingsScreen />} />
         </Route>
       </Route>
-
-      {/* NOUVEAU : Route pour la page de bannissement SANS le layout principal */}
+      
       <Route path="/banned" element={<BannedScreen />} />
     </>
   )
