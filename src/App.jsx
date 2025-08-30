@@ -8,7 +8,8 @@ import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } fro
 import bgImage from './assets/background.jpg';
 import io from 'socket.io-client';
 import { apiSlice } from './redux/slices/apiSlice';
-import { setCredentials, logout, hideWelcome } from './redux/slices/authSlice'; // Import `hideWelcome`
+// 1. Importer la nouvelle action
+import { logout, hideWelcome, updateUserInfo } from './redux/slices/authSlice';
 import BonusNotificationModal from './components/BonusNotificationModal';
 import BonusModal from './components/BonusModal';
 import SplashScreen from './components/SplashScreen';
@@ -45,6 +46,7 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
+
   useEffect(() => {
     let socket;
     if (userInfo) {
@@ -67,8 +69,9 @@ const App = () => {
       });
 
       socket.on('status_update', ({ status }) => {
+        // Pour un changement de statut, on doit utiliser setCredentials car le backend ne renvoie pas tout l'objet user
         const newUserInfo = { ...userInfo, status };
-        dispatch(setCredentials(newUserInfo));
+        dispatch(updateUserInfo({ status: status })); // Utilisons updateUserInfo ici aussi pour la cohérence
         if (status === 'banned' || status === 'suspended') {
           toast.error(`Votre compte a été ${status === 'banned' ? 'banni' : 'suspendu'}.`);
         } else if (status === 'active') {
@@ -87,20 +90,15 @@ const App = () => {
       socket.on('bonus_granted', (data) => {
         setBonusData(data);
         setIsBonusModalOpen(true);
-        const updatedUserInfo = { ...userInfo, keviumBalance: data.keviumBalance };
-        dispatch(setCredentials(updatedUserInfo));
+        // 2. Utiliser la nouvelle action pour la mise à jour
+        dispatch(updateUserInfo({ keviumBalance: data.keviumBalance }));
         dispatch(apiSlice.util.invalidateTags(['User']));
       });
 
-      // --- DÉBUT DE LA MODIFICATION ---
-      // Listener pour les notifications
       socket.on('new_notification', (notification) => {
         toast.info(`🔔 Nouvelle notification : ${notification.message}`);
-        // Invalider le cache des notifications pour forcer le rafraîchissement du compteur
         dispatch(apiSlice.util.invalidateTags(['Notification']));
       });
-      // --- FIN DE LA MODIFICATION ---
-
     }
     
     return () => {
@@ -132,7 +130,7 @@ const App = () => {
     backgroundColor: '#000',
     display: 'flex',
     flexDirection: 'column',
-    opacity: showSplash ? 0 : 1, // Cache le contenu principal pendant le splash
+    opacity: showSplash ? 0 : 1,
     transition: 'opacity 0.5s ease-in-out',
   };
   

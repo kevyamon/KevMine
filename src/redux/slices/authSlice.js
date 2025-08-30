@@ -4,8 +4,7 @@ const initialState = {
   userInfo: localStorage.getItem('userInfo')
     ? JSON.parse(localStorage.getItem('userInfo'))
     : null,
-  // NOUVEAU : Ajout de l'état pour gérer l'affichage de la transition
-  showWelcome: false, 
+  showWelcome: false,
 };
 
 const authSlice = createSlice({
@@ -15,21 +14,28 @@ const authSlice = createSlice({
     setCredentials: (state, action) => {
       state.userInfo = action.payload;
       localStorage.setItem('userInfo', JSON.stringify(action.payload));
-      // NOUVEAU : On déclenche l'affichage de la transition si un utilisateur se connecte
-      state.showWelcome = true; 
+      if (typeof action.payload.isNewUser !== 'undefined') {
+        state.showWelcome = true;
+      }
+    },
+    // NOUVEAU : Réducteur dédié aux mises à jour partielles du profil
+    updateUserInfo: (state, action) => {
+      // On fusionne les nouvelles données avec les infos existantes
+      state.userInfo = { ...state.userInfo, ...action.payload };
+      localStorage.setItem('userInfo', JSON.stringify(state.userInfo));
     },
     logout: (state) => {
       state.userInfo = null;
       localStorage.clear();
       state.showWelcome = false;
     },
-    // NOUVEAU : Action pour cacher la transition une fois qu'elle est terminée
     hideWelcome: (state) => {
       state.showWelcome = false;
     },
   },
 });
 
-export const { setCredentials, logout, hideWelcome } = authSlice.actions;
+// Exporter la nouvelle action
+export const { setCredentials, logout, hideWelcome, updateUserInfo } = authSlice.actions;
 
 export default authSlice.reducer;
