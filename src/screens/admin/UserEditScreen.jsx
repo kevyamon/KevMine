@@ -60,23 +60,8 @@ const UserEditScreen = () => {
           <Alert severity="error">{error?.data?.message || error.error}</Alert>
         ) : (
           <Box component="form" onSubmit={submitHandler}>
-            <TextField
-              fullWidth
-              label="Nom"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              margin="normal"
-              required
-            />
-            <TextField
-              fullWidth
-              label="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              margin="normal"
-              required
-              type="email"
-            />
+            <TextField fullWidth label="Nom" value={name} onChange={(e) => setName(e.target.value)} margin="normal" required />
+            <TextField fullWidth label="Email" value={email} onChange={(e) => setEmail(e.target.value)} margin="normal" required type="email" />
             <FormControlLabel
               control={
                 <Checkbox
@@ -98,7 +83,8 @@ const UserEditScreen = () => {
               >
                 <MenuItem value="active">Actif</MenuItem>
                 <MenuItem value="banned">Banni</MenuItem>
-                <MenuItem value="inactive">Inactif</MenuItem>
+                {/* CORRECTION : "Inactive" devient "Suspendu" */}
+                <MenuItem value="suspended">Suspendu</MenuItem>
               </Select>
             </FormControl>
 

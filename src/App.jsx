@@ -8,37 +8,21 @@ import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } fro
 import bgImage from './assets/background.jpg';
 import io from 'socket.io-client';
 import { apiSlice } from './redux/slices/apiSlice';
+import { setCredentials, logout } from './redux/slices/authSlice'; // Importer logout
 
-// ... (le code du thème reste inchangé)
 let theme = createTheme({
   palette: {
     mode: 'dark',
-    primary: {
-      main: '#FFD700',
-    },
-    secondary: {
-      main: '#00BFFF',
-    },
-    info: {
-      main: '#00BFFF',
-      dark: '#009acd',
-    },
-    background: {
-      default: '#121212',
-      paper: 'rgba(30, 30, 30, 0.85)',
-    },
-    text: {
-      primary: '#FFFFFF',
-      secondary: '#E0E0E0',
-    },
+    primary: { main: '#FFD700' },
+    secondary: { main: '#00BFFF' },
+    info: { main: '#00BFFF', dark: '#009acd' },
+    background: { default: '#121212', paper: 'rgba(30, 30, 30, 0.85)' },
+    text: { primary: '#FFFFFF', secondary: '#E0E0E0' },
   },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  },
+  typography: { fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif' },
 });
 
 theme = responsiveFontSizes(theme);
-
 
 const App = () => {
   const location = useLocation();
@@ -56,6 +40,7 @@ const App = () => {
         },
       });
 
+      // ... autres listeners socket ...
       socket.on('robots_updated', () => {
         dispatch(apiSlice.util.invalidateTags(['Robot']));
         toast.info('Le marché des robots a été mis à jour !');
@@ -64,19 +49,28 @@ const App = () => {
       socket.on('settings_updated', (data) => {
         dispatch(apiSlice.util.invalidateTags(['Settings']));
         const newRatePercent = (data.newRate * 100).toFixed(0);
-        if (newRatePercent > 0) {
-          toast.success(`Annonce : La commission sur les ventes est maintenant de ${newRatePercent}% !`);
-        } else {
-          toast.success(`Annonce : Profitez-en, il n'y a plus aucune commission sur les ventes ! 🎉`);
-        }
+        toast.success(`Annonce : La commission sur les ventes est maintenant de ${newRatePercent}% !`);
       });
 
+      // --- NOUVEAU : Listener pour la mise à jour de statut ---
+      socket.on('status_update', ({ status }) => {
+        const newUserInfo = { ...userInfo, status };
+        dispatch(setCredentials(newUserInfo));
+
+        if (status === 'banned' || status === 'suspended') {
+          toast.error(`Votre compte a été ${status === 'banned' ? 'banni' : 'suspendu'}.`);
+        } else if (status === 'active') {
+          toast.success('Votre compte a été réactivé ! Vous allez être déconnecté pour appliquer les changements.');
+          setTimeout(() => {
+            dispatch(logout());
+            window.location.href = '/login'; // Redirection forcée
+          }, 5000);
+        }
+      });
     }
     
     return () => {
-      if (socket) {
-        socket.disconnect();
-      }
+      if (socket) socket.disconnect();
     };
   }, [userInfo, dispatch]);
 
@@ -89,8 +83,6 @@ const App = () => {
     backgroundAttachment: 'fixed',
     backgroundImage: isLandingPage ? 'none' : `url(${bgImage})`,
     backgroundColor: '#000',
-    // CORRECTION DÉFINITIVE :
-    // On s'assure que ce conteneur principal se comporte comme une colonne flexible
     display: 'flex',
     flexDirection: 'column',
   };
@@ -100,11 +92,8 @@ const App = () => {
       <CssBaseline />
       <Box sx={appStyle}>
         <Header />
-        <ToastContainer theme="dark" />
-        {/* CORRECTION DÉFINITIVE :
-            On force la balise <main> à prendre toute la place verticale restante (flex: 1)
-            et à se comporter elle-même comme une colonne flexible. */}
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <ToastContainer theme="dark" position="bottom-right" />
+        <main style={{ flex: 1 }}>
           <Outlet />
         </main>
       </Box>

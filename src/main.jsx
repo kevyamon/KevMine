@@ -19,6 +19,7 @@ import LandingScreen from './screens/LandingScreen.jsx';
 import ProfileScreen from './screens/ProfileScreen.jsx';
 import RobotStoreScreen from './screens/RobotStoreScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
+import BannedScreen from './screens/BannedScreen.jsx'; // NOUVEAU : Importer l'écran
 
 // Route Guards
 import PrivateRoutes from './components/PrivateRoutes.jsx';
@@ -31,7 +32,7 @@ import UserEditScreen from './screens/admin/UserEditScreen.jsx';
 import RobotListScreen from './screens/admin/RobotListScreen.jsx';
 import RobotEditScreen from './screens/admin/RobotEditScreen.jsx';
 import CategoryListScreen from './screens/admin/CategoryListScreen.jsx';
-import GameSettingsScreen from './screens/admin/GameSettingsScreen.jsx'; // 1. Importer
+import GameSettingsScreen from './screens/admin/GameSettingsScreen.jsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -47,6 +48,8 @@ const router = createBrowserRouter(
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/store" element={<RobotStoreScreen />} />
         <Route path="/leaderboard" element={<LeaderboardScreen />} />
+        {/* NOUVEAU : Ajouter la route pour l'écran de bannissement */}
+        <Route path="/banned" element={<BannedScreen />} />
       </Route>
 
       {/* Admin Routes */}
@@ -57,7 +60,6 @@ const router = createBrowserRouter(
         <Route path="/admin/robotlist" element={<RobotListScreen />} />
         <Route path="/admin/robot/:id/edit" element={<RobotEditScreen />} />
         <Route path="/admin/categorylist" element={<CategoryListScreen />} />
-        {/* 2. Ajouter la nouvelle route */}
         <Route path="/admin/settings" element={<GameSettingsScreen />} />
       </Route>
     </Route>
