@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'; // 1. Importer useState
+import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
@@ -9,8 +9,10 @@ import bgImage from './assets/background.jpg';
 import io from 'socket.io-client';
 import { apiSlice } from './redux/slices/apiSlice';
 import { setCredentials, logout } from './redux/slices/authSlice';
-import BonusNotificationModal from './components/BonusNotificationModal'; // 2. Importer la nouvelle modale
-import BonusModal from './components/BonusModal'; // Importer la modale de bonus admin
+import BonusNotificationModal from './components/BonusNotificationModal';
+import BonusModal from './components/BonusModal';
+import SplashScreen from './components/SplashScreen'; // 1. Importer le Splash Screen
+import WelcomeTransition from './components/WelcomeTransition'; // 2. Importer la Transition
 
 let theme = createTheme({
   palette: {
@@ -29,12 +31,21 @@ const App = () => {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
   const dispatch = useDispatch();
-  const { userInfo } = useSelector((state) => state.auth);
+  const { userInfo, showWelcome } = useSelector((state) => state.auth); // 3. Récupérer 'showWelcome'
 
-  // 3. États pour gérer les modales
   const [bonusData, setBonusData] = useState(null);
   const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
   const [isAdminBonusModalOpen, setIsAdminBonusModalOpen] = useState(false);
+  const [showSplash, setShowSplash] = useState(true); // 4. État pour le splash screen
+
+  // 5. Logique pour cacher le splash screen après un court délai
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 1800); // 1.8 secondes
+    return () => clearTimeout(timer);
+  }, []);
+
 
   useEffect(() => {
     let socket;
@@ -75,14 +86,11 @@ const App = () => {
         dispatch(apiSlice.util.invalidateTags(['Leaderboard', 'PlayerRank']));
       });
 
-      // 4. NOUVEAU : Listener pour les bonus
       socket.on('bonus_granted', (data) => {
         setBonusData(data);
         setIsBonusModalOpen(true);
-        // Mettre à jour le solde dans le state Redux instantanément
         const updatedUserInfo = { ...userInfo, keviumBalance: data.keviumBalance };
         dispatch(setCredentials(updatedUserInfo));
-        // Invalider le cache pour que le prochain fetch soit à jour
         dispatch(apiSlice.util.invalidateTags(['User']));
       });
 
@@ -117,18 +125,29 @@ const App = () => {
     backgroundColor: '#000',
     display: 'flex',
     flexDirection: 'column',
+    opacity: showSplash ? 0 : 1, // Cache le contenu principal pendant le splash
+    transition: 'opacity 0.5s ease-in-out',
   };
+  
+  // 6. Si le splash est visible, on ne rend que lui
+  if (showSplash) {
+    return <SplashScreen />;
+  }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={appStyle}>
-        <Header onBonusClick={handleOpenAdminBonusModal} /> {/* Passer la fonction d'ouverture */}
+        {/* 7. Affichage conditionnel de la transition de bienvenue */}
+        {showWelcome && userInfo && (
+          <WelcomeTransition isNewUser={userInfo.isNewUser} userName={userInfo.name} />
+        )}
+        
+        <Header onBonusClick={handleOpenAdminBonusModal} />
         <ToastContainer theme="dark" position="bottom-right" />
         <main style={{ flex: 1 }}>
           <Outlet />
         </main>
-        {/* 5. Afficher les modales */}
         <BonusNotificationModal 
           open={isBonusModalOpen} 
           onClose={handleCloseBonusModal} 
