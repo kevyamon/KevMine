@@ -17,11 +17,12 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import SearchIcon from '@mui/icons-material/Search';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import HomeIcon from '@mui/icons-material/Home'; // 1. Importer l'icône Home
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'; // 2. Importer l'icône Back
+import HomeIcon from '@mui/icons-material/Home';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AdminNavModal from './AdminNavModal';
 
-const Header = () => {
+// 1. Accepter la prop 'onBonusClick'
+const Header = ({ onBonusClick }) => {
   const { userInfo } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -57,6 +58,13 @@ const Header = () => {
   const openAdminModal = () => {
     setIsDrawerOpen(false);
     setIsAdminModalOpen(true);
+  };
+
+  // 2. Créer la fonction qui sera passée à la modale de navigation
+  // Elle fermera la modale actuelle (AdminNavModal) avant d'ouvrir la nouvelle (BonusModal)
+  const handleBonusClick = () => {
+    setIsAdminModalOpen(false); 
+    onBonusClick(); 
   };
 
   const loggedInLinks = [
@@ -125,7 +133,6 @@ const Header = () => {
         }}
       >
         <Toolbar>
-          {/* 3. Ajouter les boutons conditionnels ici */}
           {userInfo && (
             <Box>
               <Tooltip title="Retour">
@@ -150,7 +157,7 @@ const Header = () => {
               textDecoration: 'none',
               color: 'white',
               fontWeight: 'bold',
-              ml: 2, // Ajouter une marge à gauche pour l'espacement
+              ml: 2,
             }}
           >
             KevMine
@@ -174,7 +181,12 @@ const Header = () => {
         {drawerContent}
       </Drawer>
       
-      <AdminNavModal open={isAdminModalOpen} handleClose={() => setIsAdminModalOpen(false)} />
+      {/* 3. Passer la nouvelle fonction 'handleBonusClick' à la modale de navigation */}
+      <AdminNavModal 
+        open={isAdminModalOpen} 
+        handleClose={() => setIsAdminModalOpen(false)}
+        onBonusClick={handleBonusClick} 
+      />
     </>
   );
 };
