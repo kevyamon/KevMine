@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Container, Typography, Box, Paper, IconButton, Tooltip,
   CircularProgress, Alert, Chip, TextField, InputAdornment, Divider,
-  Modal, List, ListItem, ListItemText, ListItemAvatar, Avatar
+  Modal, List, ListItem, ListItemText, ListItemAvatar, Avatar, ListItemButton, ListItemIcon
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useGetUsersQuery, useDeleteUserMutation } from '../../redux/slices/adminApiSlice';
@@ -34,7 +34,7 @@ const UserListScreen = () => {
   const { data: users, refetch, isLoading, error } = useGetUsersQuery();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // États pour gérer les modales et l'utilisateur sélectionné
   const [selectedUser, setSelectedUser] = useState(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
@@ -54,7 +54,7 @@ const UserListScreen = () => {
     setInfoModalOpen(true);
   };
   const handleCloseInfoModal = () => setInfoModalOpen(false);
-  
+
   const handleOpenActionsModal = (user) => {
     setSelectedUser(user);
     setActionsModalOpen(true);
@@ -82,7 +82,6 @@ const UserListScreen = () => {
         </Typography>
         <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.2)' }} />
 
-        {/* Barre de recherche */}
         <Paper sx={{ p: 2, mb: 3, borderRadius: 3, backgroundColor: '#111827', boxShadow: 2 }}>
           <TextField
             fullWidth
@@ -103,8 +102,7 @@ const UserListScreen = () => {
         ) : error ? (
           <Alert severity="error">{error?.data?.message || error.error}</Alert>
         ) : (
-          // Nouvelle liste d'utilisateurs
-          <Paper sx={{ maxHeight: '65vh', overflow: 'auto', borderRadius: 3, backgroundColor: '#111827', p: 1 }}>
+          <Paper sx={{ maxHeight: '65vh', overflow: 'auto', borderRadius: 3, backgroundColor: 'transparent', p: 1 }}>
             <List>
               {filteredUsers.map((user) => (
                 <Paper key={user._id} sx={{ mb: 1.5, borderRadius: 2, background: '#1f2937' }}>
@@ -128,8 +126,8 @@ const UserListScreen = () => {
                       <Avatar src={user.photo}>{user.name.charAt(0).toUpperCase()}</Avatar>
                     </ListItemAvatar>
                     <ListItemText
-                      primary={<Typography sx={{ fontWeight: 'bold' }}>{user.name}</Typography>}
-                      secondary={user.email}
+                      primary={<Typography sx={{ fontWeight: 'bold', color: 'white' }}>{user.name}</Typography>}
+                      secondary={<Typography sx={{ color: '#9ca3af' }}>{user.email}</Typography>}
                     />
                   </ListItem>
                 </Paper>
@@ -139,58 +137,59 @@ const UserListScreen = () => {
         )}
       </Paper>
 
-      {/* Modale d'informations */}
+      {/* --- MODALES --- */}
       {selectedUser && (
-        <Modal open={infoModalOpen} onClose={handleCloseInfoModal}>
-          <Box sx={modalStyle}>
-            <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
-              Détails de {selectedUser.name}
-            </Typography>
-            <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.2)' }} />
-            <Box sx={{ maxHeight: '60vh', overflowY: 'auto', pr: 2 }}>
+        <>
+          {/* Modale d'informations */}
+          <Modal open={infoModalOpen} onClose={handleCloseInfoModal}>
+            <Box sx={modalStyle}>
+              <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
+                Détails de {selectedUser.name}
+              </Typography>
+              <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.2)' }} />
+              <Box sx={{ maxHeight: '60vh', overflowY: 'auto', pr: 2 }}>
+                <List>
+                  <ListItem><ListItemText primary="ID Utilisateur" secondary={selectedUser._id} secondaryTypographyProps={{ color: '#9ca3af' }} /></ListItem>
+                  <ListItem><ListItemText primary="Nom" secondary={selectedUser.name} secondaryTypographyProps={{ color: '#9ca3af' }} /></ListItem>
+                  <ListItem><ListItemText primary="Email" secondary={selectedUser.email} secondaryTypographyProps={{ color: '#9ca3af' }} /></ListItem>
+                  <ListItem><ListItemText primary="Téléphone" secondary={selectedUser.phone || 'Non renseigné'} secondaryTypographyProps={{ color: '#9ca3af' }} /></ListItem>
+                  <ListItem>
+                    <ListItemText primary="Statut" />
+                    <Chip label={selectedUser.status} sx={{ backgroundColor: selectedUser.status === 'active' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: selectedUser.status === 'active' ? '#10B981' : '#EF4444', fontWeight: 'bold', border: `1px solid ${selectedUser.status === 'active' ? '#10B981' : '#EF4444'}`}} size="small" />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText primary="Admin" />
+                    {selectedUser.isAdmin ? <CheckCircleIcon sx={{ color: '#10B981' }} /> : <CancelIcon sx={{ color: '#EF4444' }} />}
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText primary="Super Admin" />
+                    {selectedUser.isSuperAdmin ? <CheckCircleIcon sx={{ color: '#10B981' }} /> : <CancelIcon sx={{ color: '#EF4444' }} />}
+                  </ListItem>
+                </List>
+              </Box>
+            </Box>
+          </Modal>
+
+          {/* Modale d'actions */}
+          <Modal open={actionsModalOpen} onClose={handleCloseActionsModal}>
+            <Box sx={modalStyle}>
+              <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
+                Actions pour {selectedUser.name}
+              </Typography>
+              <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.2)' }} />
               <List>
-                <ListItem><ListItemText primary="ID Utilisateur" secondary={selectedUser._id} /></ListItem>
-                <ListItem><ListItemText primary="Nom" secondary={selectedUser.name} /></ListItem>
-                <ListItem><ListItemText primary="Email" secondary={selectedUser.email} /></ListItem>
-                <ListItem><ListItemText primary="Téléphone" secondary={selectedUser.phone || 'Non renseigné'} /></ListItem>
-                <ListItem>
-                  <ListItemText primary="Statut" />
-                  <Chip label={selectedUser.status} sx={{ backgroundColor: selectedUser.status === 'active' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: selectedUser.status === 'active' ? '#10B981' : '#EF4444', fontWeight: 'bold' }} size="small" />
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="Admin" />
-                  {selectedUser.isAdmin ? <CheckCircleIcon sx={{ color: '#10B981' }} /> : <CancelIcon sx={{ color: '#EF4444' }} />}
-                </ListItem>
-                <ListItem>
-                  <ListItemText primary="Super Admin" />
-                  {selectedUser.isSuperAdmin ? <CheckCircleIcon sx={{ color: '#10B981' }} /> : <CancelIcon sx={{ color: '#EF4444' }} />}
-                </ListItem>
+                <ListItemButton component={Link} to={`/admin/user/${selectedUser._id}/edit`} onClick={handleCloseActionsModal}>
+                  <ListItemIcon><EditIcon sx={{ color: '#3B82F6' }}/></ListItemIcon>
+                  <ListItemText primary="Modifier l'utilisateur" />
+                </ListItemButton>
+                <ListItemButton onClick={() => deleteHandler(selectedUser._id)} disabled={selectedUser.isSuperAdmin || isDeleting}>
+                  <ListItemIcon>{isDeleting ? <CircularProgress size={24} color='error' /> : <DeleteIcon sx={{ color: '#EF4444' }}/>}</ListItemIcon>
+                  <ListItemText primary="Supprimer l'utilisateur" />
+                </ListItemButton>
               </List>
             </Box>
-          </Box>
-        </Modal>
-      )}
-
-      {/* Modale d'actions */}
-      {selectedUser && (
-        <Modal open={actionsModalOpen} onClose={handleCloseActionsModal}>
-          <Box sx={modalStyle}>
-            <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
-              Actions pour {selectedUser.name}
-            </Typography>
-            <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.2)' }} />
-            <List>
-              <ListItemButton component={Link} to={`/admin/user/${selectedUser._id}/edit`} onClick={handleCloseActionsModal}>
-                <ListItemIcon><EditIcon sx={{ color: '#3B82F6' }}/></ListItemIcon>
-                <ListItemText primary="Modifier l'utilisateur" />
-              </ListItemButton>
-              <ListItemButton onClick={() => deleteHandler(selectedUser._id)} disabled={selectedUser.isSuperAdmin || isDeleting}>
-                <ListItemIcon>{isDeleting ? <CircularProgress size={24} /> : <DeleteIcon sx={{ color: '#EF4444' }}/>}</ListItemIcon>
-                <ListItemText primary="Supprimer l'utilisateur" />
-              </ListItemButton>
-            </List>
-          </Box>
-        </Modal>
+          </Modal>
+        </>
       )}
     </Container>
   );
