@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   Card, CardContent, CardMedia, Typography, Box, Chip, Button,
-  CircularProgress, Modal, Divider
+  CircularProgress, Modal, Divider, IconButton, Tooltip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { toast } from 'react-toastify';
@@ -11,8 +11,12 @@ import {
   useSellRobotMutation,
 } from '../redux/slices/robotsApiSlice';
 import { useGetGameSettingsQuery } from '../redux/slices/adminApiSlice';
+import { useFindOrCreateConversationMutation } from '../redux/slices/messageApiSlice'; // 1. Importer le hook
 import SellIcon from '@mui/icons-material/Sell';
 import UpgradeIcon from '@mui/icons-material/Upgrade';
+import MailOutlineIcon from '@mui/icons-material/MailOutline'; // 2. Importer l'icône
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const RarityChip = styled(Chip)(({ theme, rarity }) => {
   const rarityColors = {
@@ -35,6 +39,9 @@ const RobotCard = ({ robot }) => {
   const [upgradeRobot, { isLoading: isUpgrading }] = useUpgradeRobotMutation();
   const [sellRobot, { isLoading: isSelling }] = useSellRobotMutation();
   const { data: settings } = useGetGameSettingsQuery();
+  const [findOrCreateConversation, { isLoading: isCreatingConvo }] = useFindOrCreateConversationMutation(); // 3. Initialiser le hook
+  const { userInfo } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   const [isSellModalOpen, setSellModalOpen] = useState(false);
 
@@ -43,6 +50,20 @@ const RobotCard = ({ robot }) => {
 
   const handleOpenSellModal = () => setSellModalOpen(true);
   const handleCloseSellModal = () => setSellModalOpen(false);
+
+  // 4. Logique pour contacter le vendeur
+  const handleContactSeller = async () => {
+    if (!robot.seller?._id) {
+      toast.error("Information du vendeur non disponible.");
+      return;
+    }
+    try {
+      await findOrCreateConversation(robot.seller._id).unwrap();
+      navigate('/messages'); // Redirige vers la page de messagerie
+    } catch (err) {
+      toast.error(err?.data?.message || 'Impossible de démarrer la conversation.');
+    }
+  };
 
   const saleCalculations = useMemo(() => {
     if (!isInInventory || !settings) return null;
@@ -77,7 +98,7 @@ const RobotCard = ({ robot }) => {
     }
   };
   
-  const isLoading = isPurchasing || isUpgrading || isSelling;
+  const isLoading = isPurchasing || isUpgrading || isSelling || isCreatingConvo;
 
   return (
     <>
@@ -86,13 +107,12 @@ const RobotCard = ({ robot }) => {
         <CardContent sx={{ flexGrow: 1 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography gutterBottom variant="h5" component="div" fontWeight="bold">{robot.name}</Typography>
-            {/* CORRECTION : Affiche le niveau si le robot est dans l'inventaire OU si c'est une revente ET que le niveau > 1 */}
             {(isInInventory || isPlayerSale) && robot.level > 1 && <Chip label={`Niv. ${robot.level}`} color="secondary" />}
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', my: 2, gap: 1, flexWrap: 'wrap' }}>
             <RarityChip label={robot.rarity} rarity={robot.rarity} size="small" />
             {robot.category && <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>{robot.category.name}</Typography>}
-            {isPlayerSale && <Chip label="Revente Joueur" color="warning" size="small" variant="outlined" />}
+            {isPlayerSale && <Chip label={`Vendu par ${robot.seller?.name || 'Joueur'}`} color="warning" size="small" variant="outlined" />}
             {robot.isSponsored && !isPlayerSale && <Chip label="Sponsorisé" color="primary" size="small" variant="outlined" sx={{ ml: 'auto' }} />}
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Puissance de minage : {robot.miningPower} KVM/h</Typography>
@@ -102,20 +122,30 @@ const RobotCard = ({ robot }) => {
             <Typography variant="body2" color="text.secondary">{!isPlayerSale && `Stock restant : ${robot.stock}`}</Typography>
           )}
         </CardContent>
-        <Box sx={{ p: 2, pt: 0 }}>
+        <Box sx={{ p: 2, pt: 0, display: 'flex', alignItems: 'center', gap: 1 }}>
           {isInInventory ? (
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <>
               <Button fullWidth variant="contained" color="secondary" startIcon={<UpgradeIcon />} onClick={() => upgradeHandler(robot._id)} disabled={isLoading}>
                 {isUpgrading ? <CircularProgress size={24} /> : 'Améliorer'}
               </Button>
               <Button fullWidth variant="outlined" color="warning" startIcon={<SellIcon />} onClick={handleOpenSellModal} disabled={isLoading}>
                 Vendre
               </Button>
-            </Box>
+            </>
           ) : (
-            <Button fullWidth variant="contained" color="primary" sx={{ fontWeight: 'bold' }} onClick={() => purchaseHandler(robot._id)} disabled={isLoading || robot.stock === 0}>
-              {isLoading ? <CircularProgress size={24} /> : robot.stock === 0 ? 'Rupture de stock' : `Acheter pour ${robot.price} KVM`}
-            </Button>
+            <>
+              <Button fullWidth variant="contained" color="primary" sx={{ fontWeight: 'bold' }} onClick={() => purchaseHandler(robot._id)} disabled={isLoading || robot.stock === 0}>
+                {isLoading ? <CircularProgress size={24} /> : robot.stock === 0 ? 'Rupture de stock' : `Acheter pour ${robot.price} KVM`}
+              </Button>
+              {/* 5. Afficher l'icône de message si c'est une revente et que l'utilisateur n'est pas le vendeur */}
+              {isPlayerSale && robot.seller?._id !== userInfo._id && (
+                <Tooltip title={`Contacter ${robot.seller?.name}`}>
+                  <IconButton onClick={handleContactSeller} disabled={isLoading} sx={{ ml: 1, border: '1px solid', borderColor: 'primary.main' }}>
+                    <MailOutlineIcon color="primary" />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </>
           )}
         </Box>
       </Card>
