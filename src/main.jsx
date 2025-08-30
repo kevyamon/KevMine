@@ -19,7 +19,7 @@ import LandingScreen from './screens/LandingScreen.jsx';
 import ProfileScreen from './screens/ProfileScreen.jsx';
 import RobotStoreScreen from './screens/RobotStoreScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
-import BannedScreen from './screens/BannedScreen.jsx'; // NOUVEAU : Importer l'écran
+import BannedScreen from './screens/BannedScreen.jsx';
 
 // Route Guards
 import PrivateRoutes from './components/PrivateRoutes.jsx';
@@ -36,33 +36,37 @@ import GameSettingsScreen from './screens/admin/GameSettingsScreen.jsx';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<App />}>
-      {/* Public Routes */}
-      <Route index={true} path="/" element={<LandingScreen />} />
-      <Route path="/login" element={<LoginScreen />} />
-      <Route path="/register" element={<RegisterScreen />} />
+    <>
+      {/* CORRECTION : Routes avec le layout principal (Header, etc.) */}
+      <Route path="/" element={<App />}>
+        {/* Routes Publiques */}
+        <Route index={true} path="/" element={<LandingScreen />} />
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/register" element={<RegisterScreen />} />
 
-      {/* Private Routes */}
-      <Route path="" element={<PrivateRoutes />}>
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/profile" element={<ProfileScreen />} />
-        <Route path="/store" element={<RobotStoreScreen />} />
-        <Route path="/leaderboard" element={<LeaderboardScreen />} />
-        {/* NOUVEAU : Ajouter la route pour l'écran de bannissement */}
-        <Route path="/banned" element={<BannedScreen />} />
+        {/* Routes Privées */}
+        <Route path="" element={<PrivateRoutes />}>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/store" element={<RobotStoreScreen />} />
+          <Route path="/leaderboard" element={<LeaderboardScreen />} />
+        </Route>
+
+        {/* Routes Admin */}
+        <Route path="" element={<AdminRoutes />}>
+          <Route path="/admin/dashboard" element={<DashboardScreen />} />
+          <Route path="/admin/userlist" element={<UserListScreen />} />
+          <Route path="/admin/user/:id/edit" element={<UserEditScreen />} />
+          <Route path="/admin/robotlist" element={<RobotListScreen />} />
+          <Route path="/admin/robot/:id/edit" element={<RobotEditScreen />} />
+          <Route path="/admin/categorylist" element={<CategoryListScreen />} />
+          <Route path="/admin/settings" element={<GameSettingsScreen />} />
+        </Route>
       </Route>
 
-      {/* Admin Routes */}
-      <Route path="" element={<AdminRoutes />}>
-        <Route path="/admin/dashboard" element={<DashboardScreen />} />
-        <Route path="/admin/userlist" element={<UserListScreen />} />
-        <Route path="/admin/user/:id/edit" element={<UserEditScreen />} />
-        <Route path="/admin/robotlist" element={<RobotListScreen />} />
-        <Route path="/admin/robot/:id/edit" element={<RobotEditScreen />} />
-        <Route path="/admin/categorylist" element={<CategoryListScreen />} />
-        <Route path="/admin/settings" element={<GameSettingsScreen />} />
-      </Route>
-    </Route>
+      {/* NOUVEAU : Route pour la page de bannissement SANS le layout principal */}
+      <Route path="/banned" element={<BannedScreen />} />
+    </>
   )
 );
 
