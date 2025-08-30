@@ -8,7 +8,6 @@ import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } fro
 import bgImage from './assets/background.jpg';
 import io from 'socket.io-client';
 import { apiSlice } from './redux/slices/apiSlice';
-// 1. Importer la nouvelle action
 import { logout, hideWelcome, updateUserInfo } from './redux/slices/authSlice';
 import BonusNotificationModal from './components/BonusNotificationModal';
 import BonusModal from './components/BonusModal';
@@ -69,9 +68,8 @@ const App = () => {
       });
 
       socket.on('status_update', ({ status }) => {
-        // Pour un changement de statut, on doit utiliser setCredentials car le backend ne renvoie pas tout l'objet user
         const newUserInfo = { ...userInfo, status };
-        dispatch(updateUserInfo({ status: status })); // Utilisons updateUserInfo ici aussi pour la cohérence
+        dispatch(updateUserInfo({ status: status }));
         if (status === 'banned' || status === 'suspended') {
           toast.error(`Votre compte a été ${status === 'banned' ? 'banni' : 'suspendu'}.`);
         } else if (status === 'active') {
@@ -90,7 +88,6 @@ const App = () => {
       socket.on('bonus_granted', (data) => {
         setBonusData(data);
         setIsBonusModalOpen(true);
-        // 2. Utiliser la nouvelle action pour la mise à jour
         dispatch(updateUserInfo({ keviumBalance: data.keviumBalance }));
         dispatch(apiSlice.util.invalidateTags(['User']));
       });
@@ -98,6 +95,13 @@ const App = () => {
       socket.on('new_notification', (notification) => {
         toast.info(`🔔 Nouvelle notification : ${notification.message}`);
         dispatch(apiSlice.util.invalidateTags(['Notification']));
+      });
+
+      // 3. Ajouter l'écouteur pour les nouveaux messages
+      socket.on('newMessage', (newMessage) => {
+        toast.info(`✉️ Nouveau message de ${newMessage.sender.name}`);
+        // Invalider les conversations et les messages pour forcer le rafraîchissement
+        dispatch(apiSlice.util.invalidateTags(['Conversation', 'Message']));
       });
     }
     

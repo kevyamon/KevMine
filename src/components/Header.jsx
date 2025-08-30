@@ -19,9 +19,10 @@ import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import NotificationsIcon from '@mui/icons-material/Notifications'; // Ajout
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import MailIcon from '@mui/icons-material/Mail'; // 1. Importer l'icône de messagerie
 import AdminNavModal from './AdminNavModal';
-import { useGetNotificationsQuery, useMarkAllAsReadMutation } from '../redux/slices/notificationApiSlice'; // Ajout
+import { useGetNotificationsQuery, useMarkAllAsReadMutation } from '../redux/slices/notificationApiSlice';
 
 const Header = ({ onBonusClick }) => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -33,7 +34,6 @@ const Header = ({ onBonusClick }) => {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Logique pour les notifications
   const { data: notifications } = useGetNotificationsQuery(undefined, {
     skip: !userInfo,
   });
@@ -85,6 +85,7 @@ const Header = ({ onBonusClick }) => {
 
   const loggedInLinks = [
     { text: 'Profil', path: '/profile', icon: <AccountCircleIcon />, action: () => handleNavigate('/profile') },
+    { text: 'Messagerie', path: '/messages', icon: <MailIcon />, action: () => handleNavigate('/messages') }, // 2. Ajouter le lien
     { text: 'Classement', path: '/leaderboard', icon: <LeaderboardIcon />, action: () => handleNavigate('/leaderboard') },
     { text: 'Marché', path: '/store', icon: <StorefrontIcon />, action: () => handleNavigate('/store') },
     ...(userInfo && userInfo.isAdmin

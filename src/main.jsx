@@ -20,7 +20,8 @@ import ProfileScreen from './screens/ProfileScreen.jsx';
 import RobotStoreScreen from './screens/RobotStoreScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 import BannedScreen from './screens/BannedScreen.jsx';
-import NotificationsScreen from './screens/NotificationsScreen.jsx'; // 1. Importer le nouvel écran
+import NotificationsScreen from './screens/NotificationsScreen.jsx';
+import MessagesScreen from './screens/MessagesScreen.jsx'; // 1. Importer le nouvel écran
 
 // Route Guards
 import PrivateRoutes from './components/PrivateRoutes.jsx';
@@ -50,7 +51,8 @@ const router = createBrowserRouter(
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/store" element={<RobotStoreScreen />} />
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
-          <Route path="/notifications" element={<NotificationsScreen />} /> {/* 2. Ajouter la nouvelle route */}
+          <Route path="/notifications" element={<NotificationsScreen />} />
+          <Route path="/messages" element={<MessagesScreen />} /> {/* 2. Ajouter la nouvelle route */}
         </Route>
 
         {/* Routes Admin */}

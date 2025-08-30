@@ -38,8 +38,10 @@ export const apiSlice = createApi({
     'Settings', 
     'Quest', 
     'DashboardStats',
-    'Notification', // NOUVEAU
-    'ArchivedNotification', // NOUVEAU
+    'Notification',
+    'ArchivedNotification',
+    'Message', // NOUVEAU
+    'Conversation', // NOUVEAU
   ],
   endpoints: (builder) => ({}),
 });
