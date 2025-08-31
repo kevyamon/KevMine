@@ -40,8 +40,9 @@ export const apiSlice = createApi({
     'DashboardStats',
     'Notification',
     'ArchivedNotification',
-    'Message', // NOUVEAU
-    'Conversation', // NOUVEAU
+    'Message',
+    'Conversation',
+    'ArchivedConversation', // NOUVEAU
   ],
   endpoints: (builder) => ({}),
 });

@@ -97,18 +97,25 @@ const App = () => {
         dispatch(apiSlice.util.invalidateTags(['Notification']));
       });
 
-      // 3. Ajouter l'écouteur pour les nouveaux messages
       socket.on('newMessage', (newMessage) => {
-        toast.info(`✉️ Nouveau message de ${newMessage.sender.name}`);
-        // Invalider les conversations et les messages pour forcer le rafraîchissement
+        // Affiche le toast uniquement si on n'est pas déjà sur la page de messagerie
+        if (!location.pathname.includes('/messages')) {
+            toast.info(`✉️ Nouveau message de ${newMessage.sender.name}`);
+        }
         dispatch(apiSlice.util.invalidateTags(['Conversation', 'Message']));
+      });
+
+      // NOUVEAU : Gérer la mise à jour d'un message (edit/delete)
+      socket.on('messageUpdated', (updatedMessage) => {
+          // Invalider le cache pour la conversation spécifique pour la rafraîchir
+          dispatch(apiSlice.util.invalidateTags([{ type: 'Message', id: updatedMessage.conversationId }]));
       });
     }
     
     return () => {
       if (socket) socket.disconnect();
     };
-  }, [userInfo, dispatch]);
+  }, [userInfo, dispatch, location.pathname]);
   
   const handleCloseBonusModal = () => {
     setIsBonusModalOpen(false);
@@ -116,11 +123,11 @@ const App = () => {
   };
   
   const handleOpenAdminBonusModal = () => {
-    setIsAdminBonusModalOpen(true);
+    setIsAdminModalOpen(true);
   };
   
   const handleCloseAdminBonusModal = () => {
-    setIsAdminBonusModalOpen(false);
+    setIsAdminModalOpen(false);
   };
 
   const appStyle = {

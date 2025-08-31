@@ -9,8 +9,21 @@ export const messageApiSlice = apiSlice.injectEndpoints({
         url: `${MESSAGES_URL}/conversations`,
         method: 'GET',
       }),
-      providesTags: ['Conversation'],
+      providesTags: (result = []) => [
+        'Conversation',
+        ...result.map(({ _id }) => ({ type: 'Conversation', id: _id })),
+      ],
       keepUnusedDataFor: 30,
+    }),
+    getArchivedConversations: builder.query({
+      query: () => ({
+        url: `${MESSAGES_URL}/conversations/archived`,
+        method: 'GET',
+      }),
+      providesTags: (result = []) => [
+        'ArchivedConversation',
+        ...result.map(({ _id }) => ({ type: 'ArchivedConversation', id: _id })),
+      ],
     }),
     getMessages: builder.query({
       query: (conversationId) => ({
@@ -20,12 +33,27 @@ export const messageApiSlice = apiSlice.injectEndpoints({
       providesTags: (result, error, arg) => [{ type: 'Message', id: arg }],
     }),
     sendMessage: builder.mutation({
-      query: ({ receiverId, text }) => ({
+      query: ({ receiverId, text, replyTo }) => ({
         url: `${MESSAGES_URL}/send/${receiverId}`,
         method: 'POST',
+        body: { text, replyTo },
+      }),
+      invalidatesTags: ['Conversation'],
+    }),
+    editMessage: builder.mutation({
+      query: ({ messageId, text }) => ({
+        url: `${MESSAGES_URL}/${messageId}`,
+        method: 'PUT',
         body: { text },
       }),
-      invalidatesTags: ['Message', 'Conversation'],
+      // Pas d'invalidation, géré par socket pour une mise à jour plus fluide
+    }),
+    deleteMessage: builder.mutation({
+      query: (messageId) => ({
+        url: `${MESSAGES_URL}/${messageId}`,
+        method: 'DELETE',
+      }),
+      // Pas d'invalidation, géré par socket
     }),
     findOrCreateConversation: builder.mutation({
       query: (receiverId) => ({
@@ -35,7 +63,6 @@ export const messageApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Conversation'],
     }),
-    // NOUVELLE MUTATION pour marquer comme lu
     markConversationAsRead: builder.mutation({
       query: (conversationId) => ({
         url: `${MESSAGES_URL}/conversations/${conversationId}/read`,
@@ -43,13 +70,24 @@ export const messageApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Conversation'],
     }),
+    toggleArchiveConversation: builder.mutation({
+      query: (conversationId) => ({
+        url: `${MESSAGES_URL}/conversations/${conversationId}/archive`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Conversation', 'ArchivedConversation'],
+    }),
   }),
 });
 
 export const {
   useGetConversationsQuery,
+  useGetArchivedConversationsQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
+  useEditMessageMutation,
+  useDeleteMessageMutation,
   useFindOrCreateConversationMutation,
-  useMarkConversationAsReadMutation, // Exporter le nouveau hook
+  useMarkConversationAsReadMutation,
+  useToggleArchiveConversationMutation,
 } = messageApiSlice;
