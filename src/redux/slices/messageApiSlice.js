@@ -27,12 +27,19 @@ export const messageApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Message', 'Conversation'],
     }),
-    // NOUVELLE MUTATION
     findOrCreateConversation: builder.mutation({
       query: (receiverId) => ({
         url: `${MESSAGES_URL}/conversations/findOrCreate`,
         method: 'POST',
         body: { receiverId },
+      }),
+      invalidatesTags: ['Conversation'],
+    }),
+    // NOUVELLE MUTATION pour marquer comme lu
+    markConversationAsRead: builder.mutation({
+      query: (conversationId) => ({
+        url: `${MESSAGES_URL}/conversations/${conversationId}/read`,
+        method: 'PUT',
       }),
       invalidatesTags: ['Conversation'],
     }),
@@ -43,5 +50,6 @@ export const {
   useGetConversationsQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
-  useFindOrCreateConversationMutation, // Exporter le nouveau hook
+  useFindOrCreateConversationMutation,
+  useMarkConversationAsReadMutation, // Exporter le nouveau hook
 } = messageApiSlice;

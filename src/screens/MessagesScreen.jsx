@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -8,33 +8,58 @@ import {
   CircularProgress,
   Alert,
   List,
-  ListItem,
+  ListItemButton,
   ListItemAvatar,
   Avatar,
   ListItemText,
-  Divider,
   TextField,
   IconButton,
+  Modal,
+  useTheme,
+  useMediaQuery,
+  Badge,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import CloseIcon from '@mui/icons-material/Close';
 import { useSelector } from 'react-redux';
 import {
   useGetConversationsQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
+  useMarkConversationAsReadMutation,
 } from '../redux/slices/messageApiSlice';
+
+// --- STYLES ---
+const modalStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  bgcolor: 'background.default',
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+// --- COMPOSANTS ---
 
 // Composant pour une seule conversation dans la liste
 const ConversationItem = ({ conversation, onSelect, isActive, currentUser }) => {
   const otherParticipant = conversation.participants.find(p => p._id !== currentUser._id);
   if (!otherParticipant) return null;
 
+  const hasUnread = conversation.unreadCount > 0;
+
   return (
-    <ListItem
-      button
+    <ListItemButton
       onClick={() => onSelect(conversation)}
       sx={{
-        backgroundColor: isActive ? 'action.selected' : 'transparent',
+        mb: 1,
+        borderRadius: 2,
+        backgroundColor: isActive ? 'action.selected' : 'background.paper',
+        border: '2px solid',
+        borderColor: hasUnread ? 'success.main' : 'transparent',
+        transition: 'border-color 0.3s',
         '&:hover': {
           backgroundColor: 'action.hover',
         },
@@ -47,24 +72,38 @@ const ConversationItem = ({ conversation, onSelect, isActive, currentUser }) => 
         primary={otherParticipant.name}
         secondary={
           <Typography variant="body2" color="text.secondary" noWrap>
-            {conversation.lastMessage ? `${conversation.lastMessage.sender.name}: ${conversation.lastMessage.text}` : 'Aucun message'}
+            {conversation.lastMessage ? `${conversation.lastMessage.sender._id === currentUser._id ? 'Vous: ' : ''}${conversation.lastMessage.text}` : 'Aucun message'}
           </Typography>
         }
       />
-    </ListItem>
+      {hasUnread && (
+        <Badge color="success" variant="dot" />
+      )}
+    </ListItemButton>
   );
 };
 
 // Composant pour la fenêtre de chat
-const ChatWindow = ({ conversation, currentUser }) => {
+const ChatWindow = ({ conversation, currentUser, onClose }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { data: messages, isLoading, error } = useGetMessagesQuery(conversation._id, {
-    pollingInterval: 5000, // Rafraîchir les messages toutes les 5 secondes
+    pollingInterval: 5000,
     skip: !conversation,
   });
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
   const [text, setText] = useState('');
+  const messagesEndRef = useRef(null);
 
   const otherParticipant = conversation.participants.find(p => p._id !== currentUser._id);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -79,11 +118,16 @@ const ChatWindow = ({ conversation, currentUser }) => {
 
   return (
     <Paper sx={{ height: '75vh', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6">{otherParticipant.name}</Typography>
+        {isMobile && (
+          <IconButton onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
+        )}
       </Box>
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
-        {isLoading && <CircularProgress />}
+      <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column' }}>
+        {isLoading && <CircularProgress sx={{ m: 'auto' }} />}
         {error && <Alert severity="error">Erreur de chargement des messages.</Alert>}
         {messages && messages.map((msg) => (
           <Box
@@ -95,18 +139,20 @@ const ChatWindow = ({ conversation, currentUser }) => {
             }}
           >
             <Paper
+              elevation={3}
               sx={{
                 p: 1.5,
                 backgroundColor: msg.sender._id === currentUser._id ? 'primary.main' : 'background.default',
                 color: msg.sender._id === currentUser._id ? 'common.black' : 'common.white',
                 maxWidth: '70%',
-                borderRadius: 2,
+                borderRadius: msg.sender._id === currentUser._id ? '15px 15px 0 15px' : '15px 15px 15px 0',
               }}
             >
               <Typography variant="body1">{msg.text}</Typography>
             </Paper>
           </Box>
         ))}
+        <div ref={messagesEndRef} />
       </Box>
       <Box component="form" onSubmit={handleSendMessage} sx={{ p: 2, display: 'flex', alignItems: 'center', borderTop: '1px solid', borderColor: 'divider' }}>
         <TextField
@@ -116,6 +162,7 @@ const ChatWindow = ({ conversation, currentUser }) => {
           value={text}
           onChange={(e) => setText(e.target.value)}
           size="small"
+          autoComplete="off"
         />
         <IconButton type="submit" color="primary" disabled={isSending}>
           <SendIcon />
@@ -125,11 +172,32 @@ const ChatWindow = ({ conversation, currentUser }) => {
   );
 };
 
-// Écran principal de la messagerie
+// --- ÉCRAN PRINCIPAL ---
 const MessagesScreen = () => {
   const { userInfo } = useSelector((state) => state.auth);
-  const { data: conversations, isLoading, error } = useGetConversationsQuery();
+  const { data: conversations, isLoading, error } = useGetConversationsQuery(undefined, {
+      pollingInterval: 15000, // Rafraîchir la liste des conversations toutes les 15s
+  });
+  const [markConversationAsRead] = useMarkConversationAsReadMutation();
   const [selectedConversation, setSelectedConversation] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const handleSelectConversation = async (conversation) => {
+    setSelectedConversation(conversation);
+    if (conversation.unreadCount > 0) {
+      await markConversationAsRead(conversation._id).unwrap();
+    }
+    if (isMobile) {
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // On ne déselectionne pas la conversation pour garder le contexte en arrière-plan
+  };
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -137,8 +205,9 @@ const MessagesScreen = () => {
         Messagerie
       </Typography>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <Paper sx={{ height: '75vh', overflowY: 'auto' }}>
+        {/* Colonne des conversations */}
+        <Grid item xs={12} md={4} sx={{ display: isMobile && selectedConversation ? 'none' : 'block' }}>
+          <Paper sx={{ height: '75vh', overflowY: 'auto', p: 1 }}>
             {isLoading && <CircularProgress />}
             {error && <Alert severity="error">Erreur de chargement des conversations.</Alert>}
             <List>
@@ -146,7 +215,7 @@ const MessagesScreen = () => {
                 <ConversationItem
                   key={convo._id}
                   conversation={convo}
-                  onSelect={setSelectedConversation}
+                  onSelect={handleSelectConversation}
                   isActive={selectedConversation?._id === convo._id}
                   currentUser={userInfo}
                 />
@@ -154,7 +223,9 @@ const MessagesScreen = () => {
             </List>
           </Paper>
         </Grid>
-        <Grid item xs={12} md={8}>
+
+        {/* Fenêtre de chat */}
+        <Grid item xs={12} md={8} sx={{ display: { xs: 'none', md: 'block' } }}>
           {selectedConversation ? (
             <ChatWindow conversation={selectedConversation} currentUser={userInfo} />
           ) : (
@@ -164,6 +235,19 @@ const MessagesScreen = () => {
           )}
         </Grid>
       </Grid>
+      
+      {/* Modale pour le chat sur mobile */}
+      <Modal open={isMobile && isModalOpen} onClose={handleCloseModal}>
+        <Box sx={modalStyle}>
+          {selectedConversation && (
+            <ChatWindow
+              conversation={selectedConversation}
+              currentUser={userInfo}
+              onClose={handleCloseModal}
+            />
+          )}
+        </Box>
+      </Modal>
     </Container>
   );
 };
