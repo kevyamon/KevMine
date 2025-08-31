@@ -22,8 +22,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
 import AdminNavModal from './AdminNavModal';
-import { useGetNotificationsQuery, useMarkAllAsReadMutation } from '../redux/slices/notificationApiSlice';
-import { useGetConversationsQuery } from '../redux/slices/messageApiSlice'; // 1. Importer le hook des conversations
+import { useGetNotificationsQuery } from '../redux/slices/notificationApiSlice';
+import { useGetConversationsQuery } from '../redux/slices/messageApiSlice';
 
 const Header = ({ onBonusClick }) => {
   const { userInfo } = useSelector((state) => state.auth);
@@ -38,24 +38,18 @@ const Header = ({ onBonusClick }) => {
   const { data: notifications } = useGetNotificationsQuery(undefined, {
     skip: !userInfo,
   });
-  // 2. Récupérer les conversations
   const { data: conversations } = useGetConversationsQuery(undefined, {
     skip: !userInfo,
   });
 
-  const [markAllAsRead] = useMarkAllAsReadMutation();
-
-  // 3. Calculer le total des notifications ET des messages non lus
   const totalUnreadCount = useMemo(() => {
     const unreadNotifications = notifications?.filter(n => !n.isRead).length || 0;
     const unreadMessages = conversations?.reduce((acc, convo) => acc + (convo.unreadCount || 0), 0) || 0;
     return unreadNotifications + unreadMessages;
   }, [notifications, conversations]);
 
-  const handleNotificationsClick = async () => {
-    if ((notifications?.filter(n => !n.isRead).length || 0) > 0) {
-      await markAllAsRead().unwrap();
-    }
+  // CORRECTION : Le clic navigue simplement vers la page, sans marquer les notifs comme lues.
+  const handleNotificationsClick = () => {
     navigate('/notifications');
   };
 
@@ -192,7 +186,6 @@ const Header = ({ onBonusClick }) => {
           {userInfo && (
             <Tooltip title="Notifications">
               <IconButton color="inherit" onClick={handleNotificationsClick}>
-                {/* 4. Utiliser le nouveau total */}
                 <Badge badgeContent={totalUnreadCount} color="error">
                   <NotificationsIcon />
                 </Badge>
