@@ -83,6 +83,15 @@ const ConversationItem = ({ conversation, onSelect, isActive, currentUser }) => 
   );
 };
 
+// Composant de chargement avec 3 points
+const CustomLoadingIndicator = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+    <CircularProgress size={20} sx={{ animationDuration: '0.8s' }} />
+    <CircularProgress size={20} sx={{ animationDuration: '0.8s', animationDelay: '0.2s', mx: 0.5 }} />
+    <CircularProgress size={20} sx={{ animationDuration: '0.8s', animationDelay: '0.4s' }} />
+  </Box>
+);
+
 // Composant pour la fenêtre de chat
 const ChatWindow = ({ conversation, currentUser, onClose }) => {
   const theme = useTheme();
@@ -127,7 +136,7 @@ const ChatWindow = ({ conversation, currentUser, onClose }) => {
         )}
       </Box>
       <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2, display: 'flex', flexDirection: 'column' }}>
-        {isLoading && <CircularProgress sx={{ m: 'auto' }} />}
+        {isLoading && <CustomLoadingIndicator />} {/* Utilisation de l'animation personnalisée */}
         {error && <Alert severity="error">Erreur de chargement des messages.</Alert>}
         {messages && messages.map((msg) => (
           <Box
@@ -176,16 +185,21 @@ const ChatWindow = ({ conversation, currentUser, onClose }) => {
 const MessagesScreen = () => {
   const { userInfo } = useSelector((state) => state.auth);
   const { data: conversations, isLoading, error } = useGetConversationsQuery(undefined, {
-      pollingInterval: 15000, // Rafraîchir la liste des conversations toutes les 15s
+      pollingInterval: 15000,
   });
   const [markConversationAsRead] = useMarkConversationAsReadMutation();
-  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [selectedConversationId, setSelectedConversationId] = useState(null); // Changement ici
   const [isModalOpen, setIsModalOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  // Trouver la conversation sélectionnée à partir de son ID
+  const selectedConversation = conversations?.find(
+    (convo) => convo._id === selectedConversationId
+  );
+
   const handleSelectConversation = async (conversation) => {
-    setSelectedConversation(conversation);
+    setSelectedConversationId(conversation._id); // Met à jour l'ID
     if (conversation.unreadCount > 0) {
       await markConversationAsRead(conversation._id).unwrap();
     }
@@ -196,7 +210,7 @@ const MessagesScreen = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    // On ne déselectionne pas la conversation pour garder le contexte en arrière-plan
+    // On ne réinitialise PLUS selectedConversationId ici pour qu'elle reste active
   };
 
   return (
@@ -206,7 +220,7 @@ const MessagesScreen = () => {
       </Typography>
       <Grid container spacing={3}>
         {/* Colonne des conversations */}
-        <Grid item xs={12} md={4} sx={{ display: isMobile && selectedConversation ? 'none' : 'block' }}>
+        <Grid item xs={12} md={4} sx={{ display: isMobile && isModalOpen ? 'none' : 'block' }}> {/* Condition d'affichage modifiée */}
           <Paper sx={{ height: '75vh', overflowY: 'auto', p: 1 }}>
             {isLoading && <CircularProgress />}
             {error && <Alert severity="error">Erreur de chargement des conversations.</Alert>}
@@ -216,7 +230,7 @@ const MessagesScreen = () => {
                   key={convo._id}
                   conversation={convo}
                   onSelect={handleSelectConversation}
-                  isActive={selectedConversation?._id === convo._id}
+                  isActive={selectedConversationId === convo._id} // Comparaison avec l'ID
                   currentUser={userInfo}
                 />
               ))}
@@ -239,12 +253,14 @@ const MessagesScreen = () => {
       {/* Modale pour le chat sur mobile */}
       <Modal open={isMobile && isModalOpen} onClose={handleCloseModal}>
         <Box sx={modalStyle}>
-          {selectedConversation && (
+          {selectedConversation ? ( // S'assurer qu'il y a une conversation sélectionnée
             <ChatWindow
               conversation={selectedConversation}
               currentUser={userInfo}
               onClose={handleCloseModal}
             />
+          ) : (
+            <CustomLoadingIndicator /> // Animation si la conversation est en cours de chargement dans la modale
           )}
         </Box>
       </Modal>
