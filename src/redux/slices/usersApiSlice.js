@@ -30,16 +30,22 @@ export const usersApiSlice = apiSlice.injectEndpoints({
       providesTags: ['User'],
       keepUnusedDataFor: 5,
     }),
-    // ---- NOUVELLE MUTATION POUR LA PHOTO DE PROFIL ----
+    // ---- NOUVELLE MUTATION POUR LA MISE À JOUR DU PROFIL ----
+    updateProfile: builder.mutation({
+      query: (data) => ({
+        url: `${USERS_URL}/profile`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['User'], // Pour rafraîchir le profil après la mise à jour
+    }),
     updateProfilePhoto: builder.mutation({
       query: (data) => ({
         url: `${USERS_URL}/profile/photo`,
         method: 'PUT',
         body: data,
-        // Note: On n'ajoute pas de Content-Type ici,
-        // le navigateur le fera automatiquement pour le FormData
       }),
-      invalidatesTags: ['User'], // Pour rafraîchir le profil après l'upload
+      invalidatesTags: ['User'],
     }),
   }),
 });
@@ -49,5 +55,6 @@ export const {
   useRegisterMutation,
   useLogoutMutation,
   useGetProfileQuery,
-  useUpdateProfilePhotoMutation, // Exporter le nouveau hook
+  useUpdateProfileMutation, // Exporter le nouveau hook
+  useUpdateProfilePhotoMutation,
 } = usersApiSlice;
