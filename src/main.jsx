@@ -21,7 +21,7 @@ import RobotStoreScreen from './screens/RobotStoreScreen.jsx';
 import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 import BannedScreen from './screens/BannedScreen.jsx';
 import NotificationsScreen from './screens/NotificationsScreen.jsx';
-import MessagesScreen from './screens/MessagesScreen.jsx'; // 1. Importer le nouvel écran
+import MessagesScreen from './screens/MessagesScreen.jsx';
 
 // Route Guards
 import PrivateRoutes from './components/PrivateRoutes.jsx';
@@ -35,6 +35,7 @@ import RobotListScreen from './screens/admin/RobotListScreen.jsx';
 import RobotEditScreen from './screens/admin/RobotEditScreen.jsx';
 import CategoryListScreen from './screens/admin/CategoryListScreen.jsx';
 import GameSettingsScreen from './screens/admin/GameSettingsScreen.jsx';
+import LogScreen from './screens/admin/LogScreen.jsx'; // 1. IMPORTER LE NOUVEL ÉCRAN
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -52,7 +53,7 @@ const router = createBrowserRouter(
           <Route path="/store" element={<RobotStoreScreen />} />
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
           <Route path="/notifications" element={<NotificationsScreen />} />
-          <Route path="/messages" element={<MessagesScreen />} /> {/* 2. Ajouter la nouvelle route */}
+          <Route path="/messages" element={<MessagesScreen />} />
         </Route>
 
         {/* Routes Admin */}
@@ -64,6 +65,7 @@ const router = createBrowserRouter(
           <Route path="/admin/robot/:id/edit" element={<RobotEditScreen />} />
           <Route path="/admin/categorylist" element={<CategoryListScreen />} />
           <Route path="/admin/settings" element={<GameSettingsScreen />} />
+          <Route path="/admin/logs" element={<LogScreen />} /> {/* 2. AJOUTER LA NOUVELLE ROUTE */}
         </Route>
       </Route>
       

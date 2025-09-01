@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Modal,
   Box,
@@ -16,7 +16,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import CategoryIcon from '@mui/icons-material/Category';
 import SettingsIcon from '@mui/icons-material/Settings';
-import CardGiftcardIcon from '@mui/icons-material/CardGiftcard'; // NOUVEAU : Importer l'icône
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
+import ArticleIcon from '@mui/icons-material/Article'; // 1. IMPORTER L'ICÔNE POUR LES LOGS
 
 const style = {
   position: 'absolute',
@@ -31,7 +32,7 @@ const style = {
   borderRadius: 2,
 };
 
-const AdminNavModal = ({ open, handleClose, onBonusClick }) => { // 1. Accepter la prop onBonusClick
+const AdminNavModal = ({ open, handleClose, onBonusClick }) => {
   const navigate = useNavigate();
 
   const handleNavigate = (path) => {
@@ -39,14 +40,14 @@ const AdminNavModal = ({ open, handleClose, onBonusClick }) => { // 1. Accepter 
     handleClose();
   };
   
-  // 2. Créer les liens avec leurs actions
   const adminLinks = [
     { text: 'Tableau de Bord', icon: <DashboardIcon />, action: () => handleNavigate('/admin/dashboard') },
     { text: 'Gestion Utilisateurs', icon: <PeopleIcon />, action: () => handleNavigate('/admin/userlist') },
     { text: 'Gestion Robots', icon: <SmartToyIcon />, action: () => handleNavigate('/admin/robotlist') },
     { text: 'Gestion Catégories', icon: <CategoryIcon />, action: () => handleNavigate('/admin/categorylist') },
+    { text: 'Console des Logs', icon: <ArticleIcon />, action: () => handleNavigate('/admin/logs') }, // 2. AJOUTER LE NOUVEAU LIEN
     { text: 'Paramètres du Jeu', icon: <SettingsIcon />, action: () => handleNavigate('/admin/settings') },
-    { text: 'Offrir un Bonus', icon: <CardGiftcardIcon />, action: onBonusClick }, // 3. Lier l'action
+    { text: 'Offrir un Bonus', icon: <CardGiftcardIcon />, action: onBonusClick },
   ];
 
   return (
