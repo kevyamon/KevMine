@@ -1,6 +1,9 @@
 import { apiSlice } from './apiSlice';
 import { ADMIN_URL, USERS_URL } from '../constants';
 
+// On ajoute la nouvelle URL pour les warnings
+const WARNINGS_URL = '/api/warnings';
+
 export const adminApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getGameSettings: builder.query({
@@ -46,14 +49,35 @@ export const adminApiSlice = apiSlice.injectEndpoints({
         }),
         keepUnusedDataFor: 5,
     }),
-    // NOUVELLE MUTATION POUR ACCORDER UN BONUS
     grantBonus: builder.mutation({
       query: (data) => ({
         url: `${ADMIN_URL}/users/grant-bonus`,
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['User'], // Invalider les utilisateurs pour rafraîchir les soldes
+      invalidatesTags: ['User'],
+    }),
+    // ---- NOUVELLES MUTATIONS ET QUERIES POUR LES AVERTISSEMENTS ----
+    sendWarning: builder.mutation({
+      query: ({ userId, message, suggestedActions }) => ({
+        url: `${ADMIN_URL}/users/${userId}/warn`,
+        method: 'POST',
+        body: { message, suggestedActions },
+      }),
+      invalidatesTags: ['Warning'],
+    }),
+    getActiveWarnings: builder.query({
+      query: () => ({
+        url: WARNINGS_URL, // Note: cette route côté backend sera créée plus tard
+      }),
+      providesTags: ['Warning'],
+    }),
+    dismissWarning: builder.mutation({
+      query: (warningId) => ({
+        url: `${WARNINGS_URL}/${warningId}/dismiss`, // Note: cette route côté backend sera créée plus tard
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Warning'],
     }),
   }),
 });
@@ -65,5 +89,9 @@ export const {
   useDeleteUserMutation,
   useUpdateUserMutation,
   useGetUserDetailsQuery,
-  useGrantBonusMutation, // Exporter le nouveau hook
+  useGrantBonusMutation,
+  // Exporter les nouveaux hooks
+  useSendWarningMutation,
+  useGetActiveWarningsQuery,
+  useDismissWarningMutation,
 } = adminApiSlice;

@@ -7,15 +7,14 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useGetUsersQuery, useDeleteUserMutation } from '../../redux/slices/adminApiSlice';
+import WarningModal from '../../components/WarningModal'; // 1. Importer la modale d'avertissement
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
 import BuildIcon from '@mui/icons-material/Build';
+import WarningIcon from '@mui/icons-material/Warning'; // Importer l'icône d'avertissement
 
-// Style pour les modales
 const modalStyle = {
   position: 'absolute',
   top: '50%',
@@ -35,10 +34,10 @@ const UserListScreen = () => {
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // États pour gérer les modales et l'utilisateur sélectionné
   const [selectedUser, setSelectedUser] = useState(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [actionsModalOpen, setActionsModalOpen] = useState(false);
+  const [warningModalOpen, setWarningModalOpen] = useState(false); // 2. État pour la modale d'avertissement
 
   const filteredUsers = useMemo(() => {
     if (!users) return [];
@@ -48,7 +47,6 @@ const UserListScreen = () => {
     );
   }, [users, searchTerm]);
 
-  // Fonctions pour ouvrir et fermer les modales
   const handleOpenInfoModal = (user) => {
     setSelectedUser(user);
     setInfoModalOpen(true);
@@ -60,13 +58,22 @@ const UserListScreen = () => {
     setActionsModalOpen(true);
   };
   const handleCloseActionsModal = () => setActionsModalOpen(false);
+  
+  // 3. Fonctions pour la modale d'avertissement
+  const handleOpenWarningModal = (user) => {
+    setSelectedUser(user);
+    setActionsModalOpen(false); // Fermer la modale d'actions
+    setWarningModalOpen(true);
+  };
+  const handleCloseWarningModal = () => setWarningModalOpen(false);
+
 
   const deleteHandler = async (id) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.')) {
       try {
         await deleteUser(id).unwrap();
         toast.success('Utilisateur supprimé avec succès');
-        handleCloseActionsModal(); // Fermer la modale après la suppression
+        handleCloseActionsModal();
         refetch();
       } catch (err) {
         toast.error(err?.data?.message || err.error);
@@ -140,7 +147,6 @@ const UserListScreen = () => {
       {/* --- MODALES --- */}
       {selectedUser && (
         <>
-          {/* Modale d'informations */}
           <Modal open={infoModalOpen} onClose={handleCloseInfoModal}>
             <Box sx={modalStyle}>
               <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
@@ -170,7 +176,6 @@ const UserListScreen = () => {
             </Box>
           </Modal>
 
-          {/* Modale d'actions */}
           <Modal open={actionsModalOpen} onClose={handleCloseActionsModal}>
             <Box sx={modalStyle}>
               <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
@@ -178,6 +183,11 @@ const UserListScreen = () => {
               </Typography>
               <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.2)' }} />
               <List>
+                {/* 4. Nouveau bouton d'action pour avertir */}
+                <ListItemButton onClick={() => handleOpenWarningModal(selectedUser)}>
+                  <ListItemIcon><WarningIcon sx={{ color: '#F59E0B' }}/></ListItemIcon>
+                  <ListItemText primary="Envoyer un avertissement" />
+                </ListItemButton>
                 <ListItemButton component={Link} to={`/admin/user/${selectedUser._id}/edit`} onClick={handleCloseActionsModal}>
                   <ListItemIcon><EditIcon sx={{ color: '#3B82F6' }}/></ListItemIcon>
                   <ListItemText primary="Modifier l'utilisateur" />
@@ -189,6 +199,13 @@ const UserListScreen = () => {
               </List>
             </Box>
           </Modal>
+          
+          {/* 5. Intégration de la modale d'avertissement */}
+          <WarningModal 
+            open={warningModalOpen}
+            handleClose={handleCloseWarningModal}
+            user={selectedUser}
+          />
         </>
       )}
     </Container>

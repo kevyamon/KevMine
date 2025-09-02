@@ -13,6 +13,7 @@ import BonusNotificationModal from './components/BonusNotificationModal';
 import BonusModal from './components/BonusModal';
 import SplashScreen from './components/SplashScreen';
 import WelcomeTransition from './components/WelcomeTransition';
+import WarningDisplay from './components/WarningDisplay'; // 1. IMPORTER LE COMPOSANT D'AVERTISSEMENT
 
 let theme = createTheme({
   palette: {
@@ -98,16 +99,13 @@ const App = () => {
       });
 
       socket.on('newMessage', (newMessage) => {
-        // Affiche le toast uniquement si on n'est pas déjà sur la page de messagerie
         if (!location.pathname.includes('/messages')) {
             toast.info(`✉️ Nouveau message de ${newMessage.sender.name}`);
         }
         dispatch(apiSlice.util.invalidateTags(['Conversation', 'Message']));
       });
 
-      // NOUVEAU : Gérer la mise à jour d'un message (edit/delete)
       socket.on('messageUpdated', (updatedMessage) => {
-          // Invalider le cache pour la conversation spécifique pour la rafraîchir
           dispatch(apiSlice.util.invalidateTags([{ type: 'Message', id: updatedMessage.conversationId }]));
       });
     }
@@ -162,6 +160,8 @@ const App = () => {
         <main style={{ flex: 1 }}>
           <Outlet />
         </main>
+        {/* 2. AFFICHER LE COMPOSANT D'AVERTISSEMENT ICI */}
+        {userInfo && <WarningDisplay />}
         <BonusNotificationModal 
           open={isBonusModalOpen} 
           onClose={handleCloseBonusModal} 
