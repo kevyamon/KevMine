@@ -21,6 +21,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; // 1. Importer l'icône des succès
 import AdminNavModal from './AdminNavModal';
 import { useGetNotificationsQuery } from '../redux/slices/notificationApiSlice';
 import { useGetConversationsQuery } from '../redux/slices/messageApiSlice';
@@ -48,7 +49,6 @@ const Header = ({ onBonusClick }) => {
     return unreadNotifications + unreadMessages;
   }, [notifications, conversations]);
 
-  // CORRECTION : Le clic navigue simplement vers la page, sans marquer les notifs comme lues.
   const handleNotificationsClick = () => {
     navigate('/notifications');
   };
@@ -88,6 +88,7 @@ const Header = ({ onBonusClick }) => {
 
   const loggedInLinks = [
     { text: 'Profil', path: '/profile', icon: <AccountCircleIcon />, action: () => handleNavigate('/profile') },
+    { text: 'Succès', path: '/achievements', icon: <EmojiEventsIcon />, action: () => handleNavigate('/achievements') }, // 2. Ajouter le lien ici
     { text: 'Messagerie', path: '/messages', icon: <MailIcon />, action: () => handleNavigate('/messages') },
     { text: 'Classement', path: '/leaderboard', icon: <LeaderboardIcon />, action: () => handleNavigate('/leaderboard') },
     { text: 'Marché', path: '/store', icon: <StorefrontIcon />, action: () => handleNavigate('/store') },

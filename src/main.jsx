@@ -22,6 +22,8 @@ import LeaderboardScreen from './screens/LeaderboardScreen.jsx';
 import BannedScreen from './screens/BannedScreen.jsx';
 import NotificationsScreen from './screens/NotificationsScreen.jsx';
 import MessagesScreen from './screens/MessagesScreen.jsx';
+// NOUVEAU : Importer l'écran des succès
+import AchievementsScreen from './screens/AchievementsScreen.jsx';
 
 // Route Guards
 import PrivateRoutes from './components/PrivateRoutes.jsx';
@@ -35,7 +37,11 @@ import RobotListScreen from './screens/admin/RobotListScreen.jsx';
 import RobotEditScreen from './screens/admin/RobotEditScreen.jsx';
 import CategoryListScreen from './screens/admin/CategoryListScreen.jsx';
 import GameSettingsScreen from './screens/admin/GameSettingsScreen.jsx';
-import LogScreen from './screens/admin/LogScreen.jsx'; // 1. IMPORTER LE NOUVEL ÉCRAN
+import LogScreen from './screens/admin/LogScreen.jsx';
+// NOUVEAU : Importer les écrans de gestion des quêtes
+import QuestListScreen from './screens/admin/QuestListScreen.jsx';
+import QuestEditScreen from './screens/admin/QuestEditScreen.jsx';
+
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -54,6 +60,8 @@ const router = createBrowserRouter(
           <Route path="/leaderboard" element={<LeaderboardScreen />} />
           <Route path="/notifications" element={<NotificationsScreen />} />
           <Route path="/messages" element={<MessagesScreen />} />
+          {/* NOUVEAU : Route pour les succès du joueur */}
+          <Route path="/achievements" element={<AchievementsScreen />} />
         </Route>
 
         {/* Routes Admin */}
@@ -65,7 +73,10 @@ const router = createBrowserRouter(
           <Route path="/admin/robot/:id/edit" element={<RobotEditScreen />} />
           <Route path="/admin/categorylist" element={<CategoryListScreen />} />
           <Route path="/admin/settings" element={<GameSettingsScreen />} />
-          <Route path="/admin/logs" element={<LogScreen />} /> {/* 2. AJOUTER LA NOUVELLE ROUTE */}
+          <Route path="/admin/logs" element={<LogScreen />} />
+          {/* NOUVEAU : Routes pour la gestion des quêtes */}
+          <Route path="/admin/questlist" element={<QuestListScreen />} />
+          <Route path="/admin/quest/:id/edit" element={<QuestEditScreen />} />
         </Route>
       </Route>
       

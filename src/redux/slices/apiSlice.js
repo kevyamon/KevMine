@@ -43,7 +43,10 @@ export const apiSlice = createApi({
     'Message',
     'Conversation',
     'ArchivedConversation',
-    'Warning', // NOUVEAU : Ajout du tag pour les avertissements
+    'Warning',
+    // NOUVEAU
+    'Achievement',
+    'UserAchievement',
   ],
   endpoints: (builder) => ({}),
 });

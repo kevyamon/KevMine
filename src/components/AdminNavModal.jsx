@@ -20,7 +20,8 @@ import CategoryIcon from '@mui/icons-material/Category';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import ArticleIcon from '@mui/icons-material/Article';
-import SearchIcon from '@mui/icons-material/Search'; // Importer l'icône de recherche
+import SearchIcon from '@mui/icons-material/Search';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn'; // 1. Importer une icône pour les quêtes
 
 const style = {
   position: 'absolute',
@@ -33,14 +34,12 @@ const style = {
   boxShadow: 24,
   p: 4,
   borderRadius: 2,
-  // NOUVEAU : On ajoute un flex pour mieux organiser
   display: 'flex',
   flexDirection: 'column',
 };
 
 const AdminNavModal = ({ open, handleClose, onBonusClick }) => {
   const navigate = useNavigate();
-  // NOUVEAU : État pour la recherche
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleNavigate = (path) => {
@@ -53,12 +52,13 @@ const AdminNavModal = ({ open, handleClose, onBonusClick }) => {
     { text: 'Gestion Utilisateurs', icon: <PeopleIcon />, action: () => handleNavigate('/admin/userlist') },
     { text: 'Gestion Robots', icon: <SmartToyIcon />, action: () => handleNavigate('/admin/robotlist') },
     { text: 'Gestion Catégories', icon: <CategoryIcon />, action: () => handleNavigate('/admin/categorylist') },
+    // 2. Ajouter le lien vers l'éditeur de quêtes
+    { text: 'Éditeur de Quêtes', icon: <AssignmentTurnedInIcon />, action: () => handleNavigate('/admin/questlist') },
     { text: 'Console des Logs', icon: <ArticleIcon />, action: () => handleNavigate('/admin/logs') },
     { text: 'Paramètres du Jeu', icon: <SettingsIcon />, action: () => handleNavigate('/admin/settings') },
     { text: 'Offrir un Bonus', icon: <CardGiftcardIcon />, action: onBonusClick },
   ];
 
-  // NOUVEAU : Filtrage des liens en fonction de la recherche
   const filteredLinks = useMemo(() => {
     if (!searchTerm) {
       return allAdminLinks;
@@ -75,7 +75,6 @@ const AdminNavModal = ({ open, handleClose, onBonusClick }) => {
           Panneau d'Administration
         </Typography>
 
-        {/* NOUVEAU : Barre de recherche */}
         <TextField
           variant="outlined"
           fullWidth
@@ -94,7 +93,6 @@ const AdminNavModal = ({ open, handleClose, onBonusClick }) => {
 
         <Divider sx={{ mb: 2 }} />
 
-        {/* NOUVEAU : Conteneur pour la liste avec scrolling */}
         <Box sx={{ overflowY: 'auto', maxHeight: '60vh' }}>
           <List>
             {filteredLinks.map((link) => (
