@@ -1,7 +1,7 @@
 import { apiSlice } from './apiSlice';
-import { ADMIN_URL, USERS_URL } from '../constants';
+import { ADMIN_URL } from '../constants';
 
-// On ajoute la nouvelle URL pour les warnings
+// L'URL pour les avertissements côté utilisateur (pas admin)
 const WARNINGS_URL = '/api/warnings';
 
 export const adminApiSlice = apiSlice.injectEndpoints({
@@ -57,8 +57,9 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
-    // ---- NOUVELLES MUTATIONS ET QUERIES POUR LES AVERTISSEMENTS ----
+    // ---- MUTATIONS ET QUERIES POUR LES AVERTISSEMENTS ----
     sendWarning: builder.mutation({
+      // La query est correcte et prend déjà en compte les 'suggestedActions'
       query: ({ userId, message, suggestedActions }) => ({
         url: `${ADMIN_URL}/users/${userId}/warn`,
         method: 'POST',
@@ -66,15 +67,16 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Warning'],
     }),
-    getActiveWarnings: builder.query({
+    // CORRECTION : Renommage pour plus de clarté, comme demandé
+    getMyWarnings: builder.query({
       query: () => ({
-        url: WARNINGS_URL, // Note: cette route côté backend sera créée plus tard
+        url: WARNINGS_URL, 
       }),
       providesTags: ['Warning'],
     }),
     dismissWarning: builder.mutation({
       query: (warningId) => ({
-        url: `${WARNINGS_URL}/${warningId}/dismiss`, // Note: cette route côté backend sera créée plus tard
+        url: `${WARNINGS_URL}/${warningId}/dismiss`,
         method: 'PUT',
       }),
       invalidatesTags: ['Warning'],
@@ -90,8 +92,8 @@ export const {
   useUpdateUserMutation,
   useGetUserDetailsQuery,
   useGrantBonusMutation,
-  // Exporter les nouveaux hooks
+  // Exporter les hooks mis à jour
   useSendWarningMutation,
-  useGetActiveWarningsQuery,
+  useGetMyWarningsQuery, // Renommé ici
   useDismissWarningMutation,
 } = adminApiSlice;

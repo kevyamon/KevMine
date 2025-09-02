@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useGetActiveWarningsQuery, useDismissWarningMutation } from '../redux/slices/adminApiSlice';
-import { Modal, Box, Typography, Button, Paper, List, ListItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
+import { useGetMyWarningsQuery, useDismissWarningMutation } from '../redux/slices/adminApiSlice';
+import { Modal, Box, Typography, Button, Paper, List, ListItem, ListItemIcon, ListItemText, Divider, CircularProgress } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { toast } from 'react-toastify';
 import io from 'socket.io-client';
 
@@ -24,20 +25,21 @@ const modalStyle = {
 
 const WarningDisplay = () => {
   const { userInfo } = useSelector((state) => state.auth);
-  // On utilise la query pour récupérer les avertissements au chargement de la page
-  const { data: initialWarnings, refetch } = useGetActiveWarningsQuery(undefined, {
+  // CORRECTION : On utilise le hook renommé 'useGetMyWarningsQuery'
+  const { data: initialWarnings } = useGetMyWarningsQuery(undefined, {
     skip: !userInfo,
   });
   const [activeWarning, setActiveWarning] = useState(null);
   const [dismissWarning, { isLoading }] = useDismissWarningMutation();
 
   useEffect(() => {
+    // Affiche le premier avertissement actif trouvé au chargement
     if (initialWarnings && initialWarnings.length > 0) {
       setActiveWarning(initialWarnings[0]);
     }
   }, [initialWarnings]);
 
-  // On écoute les nouveaux avertissements en temps réel
+  // Écoute les nouveaux avertissements en temps réel
   useEffect(() => {
     let socket;
     if (userInfo) {
@@ -46,6 +48,7 @@ const WarningDisplay = () => {
       });
 
       socket.on('new_warning', (warning) => {
+        // Affiche la nouvelle modale instantanément
         setActiveWarning(warning);
       });
     }
@@ -58,11 +61,32 @@ const WarningDisplay = () => {
     if (!activeWarning) return;
     try {
       await dismissWarning(activeWarning._id).unwrap();
-      setActiveWarning(null);
+      setActiveWarning(null); // Ferme la modale
       toast.info("L'avertissement a été acquitté.");
     } catch (err) {
       toast.error(err?.data?.message || "Erreur lors de l'acquittement de l'avertissement.");
     }
+  };
+
+  const renderSuggestedAction = (action) => {
+    // Pourrait être étendu pour ouvrir d'autres modales ou liens
+    if (action === 'Contacter le support') {
+      return (
+        <ListItem key={action}>
+          <ListItemIcon sx={{ minWidth: 36 }}><ContactSupportIcon color="info" /></ListItemIcon>
+          <ListItemText primary={action} />
+        </ListItem>
+      );
+    }
+    if (action === 'Vérifier mon profil') {
+        return (
+          <ListItem key={action}>
+            <ListItemIcon sx={{ minWidth: 36 }}><AccountCircleIcon color="info" /></ListItemIcon>
+            <ListItemText primary={action} />
+          </ListItem>
+        );
+      }
+    return null;
   };
 
   if (!activeWarning) {
@@ -70,7 +94,8 @@ const WarningDisplay = () => {
   }
 
   return (
-    <Modal open={true} aria-labelledby="warning-modal-title">
+    // CORRECTION : La modale est maintenant bloquante, comme demandé.
+    <Modal open={true} backdrop="static" keyboard={false} aria-labelledby="warning-modal-title">
       <Box sx={modalStyle}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, color: 'error.main' }}>
           <WarningAmberIcon sx={{ fontSize: 40 }} />
@@ -83,18 +108,12 @@ const WarningDisplay = () => {
             <Typography variant="body1">{activeWarning.message}</Typography>
         </Paper>
         
+        {/* NOUVEAU : Affichage dynamique des actions suggérées */}
         {activeWarning.suggestedActions && activeWarning.suggestedActions.length > 0 && (
             <Box sx={{ mt: 2 }}>
                 <Typography sx={{ fontWeight: 'bold' }}>Actions suggérées :</Typography>
                 <List dense>
-                    {activeWarning.suggestedActions.map((action, index) => (
-                        <ListItem key={index}>
-                            <ListItemIcon sx={{ minWidth: 36 }}>
-                                <ContactSupportIcon color="info" />
-                            </ListItemIcon>
-                            <ListItemText primary={action} />
-                        </ListItem>
-                    ))}
+                    {activeWarning.suggestedActions.map(action => renderSuggestedAction(action))}
                 </List>
             </Box>
         )}
