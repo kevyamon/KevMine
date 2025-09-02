@@ -1,5 +1,7 @@
 import React from 'react';
 import { useDismissWarningMutation } from '../redux/slices/adminApiSlice';
+// 1. Importer les hooks nécessaires pour les notifications
+import { useGetNotificationsQuery, useMarkOneAsReadMutation } from '../redux/slices/notificationApiSlice';
 import { Modal, Box, Typography, Button, Paper, List, ListItem, ListItemIcon, ListItemText, Divider, CircularProgress } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
@@ -21,15 +23,31 @@ const modalStyle = {
   outline: 'none',
 };
 
-// Le composant reçoit maintenant l'avertissement à afficher et une fonction pour se fermer
 const WarningDisplay = ({ activeWarning, onClose }) => {
-  const [dismissWarning, { isLoading }] = useDismissWarningMutation();
+  const [dismissWarning, { isLoading: isDismissing }] = useDismissWarningMutation();
+  // 2. Préparer les outils pour gérer les notifications
+  const { data: notifications } = useGetNotificationsQuery();
+  const [markOneAsRead, { isLoading: isMarkingRead }] = useMarkOneAsReadMutation();
+
+  const isLoading = isDismissing || isMarkingRead;
 
   const handleDismiss = async () => {
     if (!activeWarning) return;
     try {
+      // Rejeter l'avertissement
       await dismissWarning(activeWarning._id).unwrap();
-      onClose(); // Appelle la fonction du parent pour réinitialiser l'état
+
+      // 3. Chercher et marquer la notification correspondante comme lue
+      if (notifications) {
+        const relatedNotification = notifications.find(
+          (notif) => notif.link === activeWarning._id && !notif.isRead
+        );
+        if (relatedNotification) {
+          await markOneAsRead(relatedNotification._id).unwrap();
+        }
+      }
+
+      onClose();
       toast.info("L'avertissement a été acquitté.");
     } catch (err) {
       toast.error(err?.data?.message || "Erreur lors de l'acquittement de l'avertissement.");
@@ -56,7 +74,6 @@ const WarningDisplay = ({ activeWarning, onClose }) => {
     return null;
   };
 
-  // Si aucun avertissement n'est actif, le composant ne rend rien.
   if (!activeWarning) {
     return null;
   }
