@@ -7,13 +7,17 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useGetUsersQuery, useDeleteUserMutation } from '../../redux/slices/adminApiSlice';
-import WarningModal from '../../components/WarningModal'; // 1. Importer la modale d'avertissement
+import WarningModal from '../../components/WarningModal';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
 import BuildIcon from '@mui/icons-material/Build';
-import WarningIcon from '@mui/icons-material/Warning'; // Importer l'icône d'avertissement
+import WarningIcon from '@mui/icons-material/Warning';
+// --- CORRECTION : J'ajoute les icônes manquantes ici ---
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+
 
 const modalStyle = {
   position: 'absolute',
@@ -37,7 +41,7 @@ const UserListScreen = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [actionsModalOpen, setActionsModalOpen] = useState(false);
-  const [warningModalOpen, setWarningModalOpen] = useState(false); // 2. État pour la modale d'avertissement
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
 
   const filteredUsers = useMemo(() => {
     if (!users) return [];
@@ -59,10 +63,9 @@ const UserListScreen = () => {
   };
   const handleCloseActionsModal = () => setActionsModalOpen(false);
   
-  // 3. Fonctions pour la modale d'avertissement
   const handleOpenWarningModal = (user) => {
     setSelectedUser(user);
-    setActionsModalOpen(false); // Fermer la modale d'actions
+    setActionsModalOpen(false);
     setWarningModalOpen(true);
   };
   const handleCloseWarningModal = () => setWarningModalOpen(false);
@@ -183,7 +186,6 @@ const UserListScreen = () => {
               </Typography>
               <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.2)' }} />
               <List>
-                {/* 4. Nouveau bouton d'action pour avertir */}
                 <ListItemButton onClick={() => handleOpenWarningModal(selectedUser)}>
                   <ListItemIcon><WarningIcon sx={{ color: '#F59E0B' }}/></ListItemIcon>
                   <ListItemText primary="Envoyer un avertissement" />
@@ -200,7 +202,6 @@ const UserListScreen = () => {
             </Box>
           </Modal>
           
-          {/* 5. Intégration de la modale d'avertissement */}
           <WarningModal 
             open={warningModalOpen}
             handleClose={handleCloseWarningModal}
