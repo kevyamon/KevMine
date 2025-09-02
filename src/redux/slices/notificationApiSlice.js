@@ -31,6 +31,14 @@ export const notificationApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Notification'],
     }),
+    // NOUVEAU : Mutation pour marquer une seule notification comme lue
+    markOneAsRead: builder.mutation({
+      query: (notificationId) => ({
+        url: `${NOTIFICATIONS_URL}/${notificationId}/mark-read`,
+        method: 'PUT',
+      }),
+      invalidatesTags: (result, error, arg) => [{ type: 'Notification', id: arg }],
+    }),
     toggleArchiveNotification: builder.mutation({
       query: (notificationId) => ({
         url: `${NOTIFICATIONS_URL}/${notificationId}/archive`,
@@ -46,4 +54,5 @@ export const {
   useGetArchivedNotificationsQuery,
   useMarkAllAsReadMutation,
   useToggleArchiveNotificationMutation,
+  useMarkOneAsReadMutation, // Exporter le nouveau hook
 } = notificationApiSlice;

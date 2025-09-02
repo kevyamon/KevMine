@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom'; // 1. Importer useOutletContext
 import {
   Container, Typography, Box, Paper, List, ListItem, ListItemIcon, ListItemText,
   CircularProgress, Alert, IconButton, Tooltip, Tabs, Tab, Divider, ListItemButton
@@ -8,9 +8,12 @@ import {
   useGetNotificationsQuery,
   useGetArchivedNotificationsQuery,
   useToggleArchiveNotificationMutation,
+  useMarkOneAsReadMutation, // 2. Importer la nouvelle mutation
 } from '../redux/slices/notificationApiSlice';
-import { useGetConversationsQuery } from '../redux/slices/messageApiSlice'; // 1. Importer le hook des conversations
+import { useGetMyWarningsQuery } from '../redux/slices/adminApiSlice'; // 3. Importer le hook des avertissements
+import { useGetConversationsQuery } from '../redux/slices/messageApiSlice';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -19,7 +22,7 @@ import AnnouncementIcon from '@mui/icons-material/Announcement';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
-import MailIcon from '@mui/icons-material/Mail'; // Pour les messages
+import MailIcon from '@mui/icons-material/Mail';
 
 const getNotificationIcon = (type) => {
   switch (type) {
@@ -31,8 +34,15 @@ const getNotificationIcon = (type) => {
   }
 };
 
-const NotificationItem = ({ notification }) => {
+// 4. Le composant accepte maintenant un `onClick`
+const NotificationItem = ({ notification, onClick }) => {
   const [toggleArchive, { isLoading }] = useToggleArchiveNotificationMutation();
+
+  const handleItemClick = () => {
+    if (onClick) {
+      onClick(notification);
+    }
+  };
 
   return (
     <Paper
@@ -43,33 +53,28 @@ const NotificationItem = ({ notification }) => {
         borderLeft: `4px solid ${notification.isRead ? 'transparent' : '#FFD700'}`,
       }}
     >
-      <ListItem
-        secondaryAction={
-          <Tooltip title={notification.isArchived ? 'Désarchiver' : 'Archiver'}>
-            <IconButton edge="end" onClick={() => toggleArchive(notification._id)} disabled={isLoading}>
-              {notification.isArchived ? <UnarchiveIcon /> : <ArchiveIcon />}
-            </IconButton>
-          </Tooltip>
-        }
-      >
+      <ListItemButton onClick={handleItemClick} sx={{ borderRadius: 1 }}>
         <ListItemIcon>{getNotificationIcon(notification.type)}</ListItemIcon>
         <ListItemText
           primary={notification.message}
           secondary={new Date(notification.createdAt).toLocaleString()}
         />
-      </ListItem>
+        <Tooltip title={notification.isArchived ? 'Désarchiver' : 'Archiver'}>
+          <IconButton edge="end" onClick={(e) => { e.stopPropagation(); toggleArchive(notification._id); }} disabled={isLoading}>
+            {notification.isArchived ? <UnarchiveIcon /> : <ArchiveIcon />}
+          </IconButton>
+        </Tooltip>
+      </ListItemButton>
     </Paper>
   );
 };
 
-// 2. Nouveau composant pour afficher les messages non lus
 const UnreadMessageItem = ({ conversation, currentUser }) => {
     const navigate = useNavigate();
     const otherParticipant = conversation.participants.find(p => p._id !== currentUser._id);
     if (!otherParticipant) return null;
 
     const handleClick = () => {
-        // Naviguer vers la messagerie (la logique de "marquer comme lu" est déjà là-bas)
         navigate('/messages');
     };
 
@@ -90,14 +95,14 @@ const UnreadMessageItem = ({ conversation, currentUser }) => {
 const NotificationsScreen = () => {
   const [tab, setTab] = useState(0);
   const { userInfo } = useSelector((state) => state.auth);
-  const navigate = useNavigate();
+  const { setActiveWarning } = useOutletContext(); // 5. Récupérer la fonction du contexte de l'Outlet
 
   const { data: notifications = [], isLoading: isLoadingNotifs, error: errorNotifs } = useGetNotificationsQuery();
   const { data: archived = [], isLoading: isLoadingArchived, error: errorArchived } = useGetArchivedNotificationsQuery();
-  // 3. Récupérer les conversations
   const { data: conversations = [], isLoading: isLoadingConvos, error: errorConvos } = useGetConversationsQuery();
+  const { data: warnings = [], isLoading: isLoadingWarnings, error: errorWarnings } = useGetMyWarningsQuery(); // 6. Récupérer les avertissements
+  const [markOneAsRead] = useMarkOneAsReadMutation();
 
-  // 4. Filtrer pour ne garder que les conversations avec des messages non lus
   const unreadConversations = useMemo(() => 
     conversations.filter(c => c.unreadCount > 0), 
   [conversations]);
@@ -106,8 +111,28 @@ const NotificationsScreen = () => {
     setTab(newValue);
   };
 
-  const isLoading = isLoadingNotifs || isLoadingArchived || isLoadingConvos;
-  const error = errorNotifs || errorArchived || errorConvos;
+  // 7. Logique de clic sur une notification
+  const handleNotificationClick = async (notification) => {
+    if (notification.type === 'warning' && notification.link) {
+      const warningToDisplay = warnings.find(w => w._id === notification.link);
+      if (warningToDisplay) {
+        setActiveWarning(warningToDisplay); // Affiche la modale
+        if (!notification.isRead) {
+          try {
+            await markOneAsRead(notification._id).unwrap(); // Marque la notif comme lue
+          } catch (err) {
+            toast.error("Erreur lors de la mise à jour de la notification.");
+          }
+        }
+      } else {
+        toast.error("Impossible de trouver l'avertissement associé.");
+      }
+    }
+    // Ici, on pourrait ajouter des logiques pour d'autres types de notifications (ex: rediriger vers une vente)
+  };
+
+  const isLoading = isLoadingNotifs || isLoadingArchived || isLoadingConvos || isLoadingWarnings;
+  const error = errorNotifs || errorArchived || errorConvos || errorWarnings;
 
   const unreadNotifications = notifications.filter(n => !n.isRead);
 
@@ -129,20 +154,18 @@ const NotificationsScreen = () => {
 
           {tab === 0 && !isLoading && (
             <>
-              {unreadConversations.length === 0 && unreadNotifications.length === 0 ? (
+              {unreadConversations.length === 0 && notifications.length === 0 ? (
                 <Typography>Votre boîte de réception est vide.</Typography>
               ) : (
                 <List>
-                  {/* 5. Afficher les messages non lus en premier */}
                   {unreadConversations.map(convo => (
                     <UnreadMessageItem key={convo._id} conversation={convo} currentUser={userInfo} />
                   ))}
                   
-                  {unreadConversations.length > 0 && unreadNotifications.length > 0 && <Divider sx={{ my: 3 }} />}
+                  {unreadConversations.length > 0 && notifications.length > 0 && <Divider sx={{ my: 3 }} />}
 
-                  {/* Puis afficher les notifications non archivées */}
                   {notifications.map(notif => (
-                    <NotificationItem key={notif._id} notification={notif} />
+                    <NotificationItem key={notif._id} notification={notif} onClick={handleNotificationClick} />
                   ))}
                 </List>
               )}
@@ -153,7 +176,7 @@ const NotificationsScreen = () => {
             <List>
               {archived.length > 0 ? (
                 archived.map(notif => (
-                  <NotificationItem key={notif._id} notification={notif} />
+                  <NotificationItem key={notif._id} notification={notif} onClick={handleNotificationClick} />
                 ))
               ) : (
                 <Typography>Vos archives sont vides.</Typography>

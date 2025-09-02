@@ -42,7 +42,8 @@ export const apiSlice = createApi({
     'ArchivedNotification',
     'Message',
     'Conversation',
-    'ArchivedConversation', // NOUVEAU
+    'ArchivedConversation',
+    'Warning', // NOUVEAU : Ajout du tag pour les avertissements
   ],
   endpoints: (builder) => ({}),
 });

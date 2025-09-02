@@ -8,12 +8,12 @@ import { Box, createTheme, ThemeProvider, CssBaseline, responsiveFontSizes } fro
 import bgImage from './assets/background.jpg';
 import io from 'socket.io-client';
 import { apiSlice } from './redux/slices/apiSlice';
-import { logout, hideWelcome, updateUserInfo } from './redux/slices/authSlice';
+import { logout, updateUserInfo } from './redux/slices/authSlice';
 import BonusNotificationModal from './components/BonusNotificationModal';
 import BonusModal from './components/BonusModal';
 import SplashScreen from './components/SplashScreen';
 import WelcomeTransition from './components/WelcomeTransition';
-import WarningDisplay from './components/WarningDisplay'; // 1. IMPORTER LE COMPOSANT D'AVERTISSEMENT
+import WarningDisplay from './components/WarningDisplay';
 
 let theme = createTheme({
   palette: {
@@ -38,6 +38,9 @@ const App = () => {
   const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
   const [isAdminBonusModalOpen, setIsAdminBonusModalOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  // NOUVEAU : État pour gérer l'avertissement actif à afficher
+  const [activeWarning, setActiveWarning] = useState(null);
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -69,7 +72,6 @@ const App = () => {
       });
 
       socket.on('status_update', ({ status }) => {
-        const newUserInfo = { ...userInfo, status };
         dispatch(updateUserInfo({ status: status }));
         if (status === 'banned' || status === 'suspended') {
           toast.error(`Votre compte a été ${status === 'banned' ? 'banni' : 'suspendu'}.`);
@@ -94,8 +96,16 @@ const App = () => {
       });
 
       socket.on('new_notification', (notification) => {
-        toast.info(`🔔 Nouvelle notification : ${notification.message}`);
+        // On n'affiche pas de toast pour les avertissements, la modale suffit
+        if (notification.type !== 'warning') {
+          toast.info(`🔔 Nouvelle notification : ${notification.message}`);
+        }
         dispatch(apiSlice.util.invalidateTags(['Notification']));
+      });
+      
+      // NOUVEAU : Listener spécifique pour les avertissements
+      socket.on('new_warning', (warningData) => {
+        setActiveWarning(warningData); // Affiche la modale
       });
 
       socket.on('newMessage', (newMessage) => {
@@ -158,10 +168,16 @@ const App = () => {
         <Header onBonusClick={handleOpenAdminBonusModal} />
         <ToastContainer theme="dark" position="bottom-right" />
         <main style={{ flex: 1 }}>
-          <Outlet />
+          {/* NOUVEAU : On passe une prop pour ouvrir la modale depuis d'autres composants */}
+          <Outlet context={{ setActiveWarning }} />
         </main>
-        {/* 2. AFFICHER LE COMPOSANT D'AVERTISSEMENT ICI */}
-        {userInfo && <WarningDisplay />}
+        
+        {/* NOUVEAU : Le composant est maintenant contrôlé par l'état local de App.jsx */}
+        <WarningDisplay 
+          activeWarning={activeWarning}
+          onClose={() => setActiveWarning(null)}
+        />
+        
         <BonusNotificationModal 
           open={isBonusModalOpen} 
           onClose={handleCloseBonusModal} 
