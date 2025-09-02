@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Container, Typography, Box, Paper, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, IconButton, Tooltip,
-  CircularProgress, Alert, Button, Modal, TextField
+  CircularProgress, Alert, Button, Modal, TextField, InputAdornment
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import {
@@ -14,6 +14,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
 
 const style = {
   position: 'absolute',
@@ -39,10 +40,20 @@ const CategoryListScreen = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   
-  // Nouveaux états pour la modale de suppression
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [confirmationCode, setConfirmationCode] = useState('');
+
+  // --- NOUVEAU : Logique de recherche ---
+  const [searchTerm, setSearchTerm] = useState('');
+  const filteredCategories = useMemo(() => {
+    if (!categories) return [];
+    return categories.filter(category =>
+      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [categories, searchTerm]);
+  // --- FIN NOUVEAU ---
 
   const openModal = (category = null) => {
     setCurrentCategory(category);
@@ -102,60 +113,79 @@ const CategoryListScreen = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
-          Gestion des Catégories
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => openModal()}
-        >
-          Créer une Catégorie
-        </Button>
-      </Box>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* NOUVEAU : Wrapper Paper pour le style unifié */}
+      <Paper elevation={6} sx={{ p: 3, borderRadius: 4, background: 'linear-gradient(145deg, #1f2937, #111827)', color: 'white' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+            🗂️ Gestion des Catégories
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => openModal()}
+          >
+            Créer une Catégorie
+          </Button>
+        </Box>
 
-      {isLoading ? (
-        <CircularProgress />
-      ) : error ? (
-        <Alert severity="error">{error?.data?.message || error.error}</Alert>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>NOM</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>DESCRIPTION</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold' }}>ACTIONS</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {categories.map((category) => (
-                <TableRow key={category._id} hover>
-                  <TableCell>{category._id}</TableCell>
-                  <TableCell>{category.name}</TableCell>
-                  <TableCell>{category.description}</TableCell>
-                  <TableCell align="center">
-                    <Tooltip title="Modifier">
-                      <IconButton onClick={() => openModal(category)} sx={{ mr: 1 }}>
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Supprimer">
-                      <IconButton color="error" onClick={() => openDeleteModal(category)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
+        {/* NOUVEAU : Barre de recherche */}
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="🔍 Filtrer par nom ou description..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 3, backgroundColor: '#111827' } }}
+          InputProps={{
+            startAdornment: (<InputAdornment position="start"><SearchIcon sx={{ color: 'gray' }} /></InputAdornment>),
+            style: { color: 'white' },
+          }}
+        />
+
+        {isLoading ? (
+          <CircularProgress />
+        ) : error ? (
+          <Alert severity="error">{error?.data?.message || error.error}</Alert>
+        ) : (
+          // NOUVEAU : Conteneur scrollable
+          <TableContainer component={Paper} sx={{ maxHeight: '65vh', backgroundColor: '#111827', borderRadius: 2 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>NOM</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>DESCRIPTION</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>ACTIONS</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+              </TableHead>
+              <TableBody>
+                {/* On utilise les données filtrées */}
+                {filteredCategories.map((category) => (
+                  <TableRow key={category._id} hover>
+                    <TableCell>{category._id}</TableCell>
+                    <TableCell>{category.name}</TableCell>
+                    <TableCell>{category.description}</TableCell>
+                    <TableCell align="center">
+                      <Tooltip title="Modifier">
+                        <IconButton onClick={() => openModal(category)} sx={{ mr: 1 }}>
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Supprimer">
+                        <IconButton color="error" onClick={() => openDeleteModal(category)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Paper>
 
       {/* Modale pour Créer/Modifier */}
       <Modal open={modalOpen} onClose={closeModal}>
