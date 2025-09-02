@@ -16,25 +16,23 @@ const QuestsList = () => {
     error,
     refetch,
   } = useGetQuestsQuery(undefined, {
-    // Rafraîchir les quêtes toutes les 60 secondes pour garder les données à jour
     pollingInterval: 60000, 
   });
 
-  // Trier les quêtes pour un meilleur affichage :
-  // 1. Terminées et non réclamées
-  // 2. En cours
-  // 3. Réclamées
   const sortedQuests = React.useMemo(() => {
     if (!userQuests) return [];
-    return [...userQuests].sort((a, b) => {
-      if (a.isClaimed !== b.isClaimed) {
-        return a.isClaimed ? 1 : -1;
-      }
-      if (a.isCompleted !== b.isCompleted) {
-        return a.isCompleted ? -1 : 1;
-      }
-      return 0; // Garder l'ordre original si les statuts sont identiques
-    });
+    // On filtre pour s'assurer que la quête associée existe bien avant de trier
+    return [...userQuests]
+      .filter(userQuest => userQuest.quest) // <-- CORRECTION AJOUTÉE ICI
+      .sort((a, b) => {
+        if (a.isClaimed !== b.isClaimed) {
+          return a.isClaimed ? 1 : -1;
+        }
+        if (a.isCompleted !== b.isCompleted) {
+          return a.isCompleted ? -1 : 1;
+        }
+        return 0;
+      });
   }, [userQuests]);
 
   if (isLoading) {
