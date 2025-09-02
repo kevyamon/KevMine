@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Header from './components/Header';
 import { ToastContainer, toast } from 'react-toastify';
@@ -38,7 +38,6 @@ const App = () => {
   const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
   const [isAdminBonusModalOpen, setIsAdminBonusModalOpen] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  // NOUVEAU : État pour gérer l'avertissement actif à afficher
   const [activeWarning, setActiveWarning] = useState(null);
 
 
@@ -58,6 +57,10 @@ const App = () => {
           userId: userInfo._id,
           isAdmin: userInfo.isAdmin,
         },
+      });
+
+      socket.on('quest_updated', () => {
+        dispatch(apiSlice.util.invalidateTags(['Quest']));
       });
 
       socket.on('robots_updated', () => {
@@ -96,16 +99,14 @@ const App = () => {
       });
 
       socket.on('new_notification', (notification) => {
-        // On n'affiche pas de toast pour les avertissements, la modale suffit
         if (notification.type !== 'warning') {
           toast.info(`🔔 Nouvelle notification : ${notification.message}`);
         }
         dispatch(apiSlice.util.invalidateTags(['Notification']));
       });
       
-      // NOUVEAU : Listener spécifique pour les avertissements
       socket.on('new_warning', (warningData) => {
-        setActiveWarning(warningData); // Affiche la modale
+        setActiveWarning(warningData);
       });
 
       socket.on('newMessage', (newMessage) => {
@@ -168,11 +169,9 @@ const App = () => {
         <Header onBonusClick={handleOpenAdminBonusModal} />
         <ToastContainer theme="dark" position="bottom-right" />
         <main style={{ flex: 1 }}>
-          {/* NOUVEAU : On passe une prop pour ouvrir la modale depuis d'autres composants */}
           <Outlet context={{ setActiveWarning }} />
         </main>
         
-        {/* NOUVEAU : Le composant est maintenant contrôlé par l'état local de App.jsx */}
         <WarningDisplay 
           activeWarning={activeWarning}
           onClose={() => setActiveWarning(null)}
